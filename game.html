@@ -1,28 +1,230 @@
 <!DOCTYPE html>
 <html lang="pt">
 <head>
-  <meta charset="UTF-8">
-  <title>Padaria Artesanal</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { overflow: hidden; background: #000; }
-    canvas { display: block; }
-  </style>
+<meta charset="UTF-8">
+<title>Padaria Artesanal</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Lato:wght@300;400&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{overflow:hidden;font-family:'Lato',sans-serif;background:#111}
+
+#hud{
+  position:absolute;top:0;left:0;right:0;
+  display:flex;justify-content:space-between;align-items:flex-start;
+  padding:15px;pointer-events:none;
+}
+
+#money-box{
+  background:linear-gradient(135deg,rgba(20,12,5,0.95),rgba(40,20,8,0.9));
+  border:1px solid #c8960c;
+  border-radius:12px;
+  padding:12px 20px;
+  color:#f5d060;
+  font-family:'Playfair Display',serif;
+  font-size:26px;
+  font-weight:700;
+  letter-spacing:1px;
+  text-shadow:0 0 20px #c8960c88;
+  box-shadow:0 4px 30px rgba(0,0,0,0.5),inset 0 1px 0 rgba(255,220,100,0.2);
+  min-width:150px;
+  text-align:center;
+}
+#money-label{font-size:10px;letter-spacing:3px;color:#c8960c;font-family:'Lato';font-weight:300;text-transform:uppercase;margin-bottom:2px}
+
+#controls-box{
+  background:rgba(10,6,2,0.88);
+  border:1px solid rgba(200,150,12,0.3);
+  border-radius:12px;
+  padding:12px 16px;
+  color:#d4b896;
+  font-size:12px;
+  line-height:1.8;
+  letter-spacing:0.5px;
+}
+#controls-box b{color:#f5d060;font-family:'Playfair Display';font-size:13px}
+
+#state-box{
+  background:rgba(10,6,2,0.88);
+  border:1px solid rgba(200,150,12,0.3);
+  border-radius:12px;
+  padding:12px 18px;
+  color:#d4b896;
+  font-size:13px;
+  min-width:160px;
+  text-align:center;
+}
+#state-box b{color:#f5d060;display:block;margin-bottom:5px;font-family:'Playfair Display'}
+
+#oven-hud{
+  position:absolute;bottom:20px;left:50%;transform:translateX(-50%);
+  background:linear-gradient(135deg,rgba(20,10,2,0.95),rgba(50,25,5,0.9));
+  border:1px solid #b85c1a;
+  border-radius:14px;
+  padding:14px 24px;
+  color:#f4d0a0;
+  text-align:center;
+  min-width:240px;
+  box-shadow:0 4px 30px rgba(200,80,0,0.2);
+}
+#oven-hud b{font-family:'Playfair Display';font-size:14px;letter-spacing:2px;color:#e8a050}
+#oven-timer{font-size:13px;margin:6px 0 8px;color:#d4b896}
+#oven-bar-bg{height:8px;background:rgba(255,255,255,0.1);border-radius:4px;overflow:hidden}
+#oven-bar{height:100%;width:0%;background:linear-gradient(90deg,#c84b00,#ff8c00,#ffd700);border-radius:4px;transition:width 0.2s}
+
+/* PAINEL */
+#customers-panel{
+  position:absolute;right:15px;top:80px;
+  display:flex;flex-direction:column;gap:10px;
+  pointer-events:none;
+}
+.customer-card{
+  background:linear-gradient(135deg,rgba(10,6,2,0.95),rgba(30,15,5,0.9));
+  border:1px solid rgba(200,150,50,0.4);
+  border-radius:12px;
+  padding:12px 16px;
+  color:#d4b896;
+  font-size:12px;
+  min-width:170px;
+  animation:slideIn 0.4s ease;
+  box-shadow:0 4px 20px rgba(0,0,0,0.4);
+}
+.customer-card.urgent{border-color:#cc2200;box-shadow:0 4px 20px rgba(200,30,0,0.3)}
+.customer-card .cname{font-family:'Playfair Display';color:#f5d060;font-size:13px;margin-bottom:4px}
+.customer-card .order{color:#e8c87a;margin:3px 0}
+.customer-card .patience-bar{height:5px;background:rgba(255,255,255,0.1);border-radius:3px;overflow:hidden;margin-top:8px}
+.customer-card .patience{height:100%;background:linear-gradient(90deg,#22cc44,#cccc00);border-radius:3px;transition:width 0.5s}
+.customer-card .patience.low{background:linear-gradient(90deg,#cc0000,#cc4400)}
+
+@keyframes slideIn{from{opacity:0;transform:translateX(30px)}to{opacity:1;transform:translateX(0)}}
+
+#notif{
+  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  background:rgba(10,6,2,0.95);
+  border:1px solid #c8960c;
+  border-radius:14px;
+  padding:16px 28px;
+  color:#f5d060;
+  font-family:'Playfair Display';
+  font-size:20px;
+  text-align:center;
+  pointer-events:none;
+  opacity:0;
+  transition:opacity 0.3s;
+  box-shadow:0 8px 40px rgba(0,0,0,0.6),0 0 60px rgba(200,150,12,0.15);
+}
+
+#recipe-hud{
+  position:absolute;bottom:20px;right:15px;
+  background:rgba(10,6,2,0.9);
+  border:1px solid rgba(200,150,12,0.3);
+  border-radius:12px;
+  padding:12px 16px;
+  color:#d4b896;
+  font-size:12px;
+  min-width:150px;
+}
+#recipe-hud b{font-family:'Playfair Display';color:#f5d060;display:block;margin-bottom:6px}
+.recipe-step{padding:3px 0;display:flex;align-items:center;gap:6px}
+.recipe-step.done{color:#22cc44;text-decoration:line-through;opacity:0.6}
+.recipe-step.active{color:#f5d060;font-weight:bold}
+.recipe-step::before{content:'○';font-size:10px}
+.recipe-step.done::before{content:'✓'}
+.recipe-step.active::before{content:'●';color:#f5d060}
+
+canvas{display:block}
+</style>
 </head>
 <body>
 
+<div id="hud">
+  <div id="money-box">
+    <div id="money-label">Caixa</div>
+    <span id="money">0,00 €</span>
+  </div>
+  <div id="state-box">
+    <b>Padeiro</b>
+    <span id="state">Mãos livres</span>
+  </div>
+  <div id="controls-box">
+    <b> Padaria Artesanal</b><br>
+    <b>WASD</b> · mover<br>
+    <b>E</b> · pegar massa (mesa)<br>
+    <b>Q</b> · amassar (mesa)<br>
+    <b>F</b> · colocar no forno<br>
+    <b>SPACE</b> · tirar do forno<br>
+    <b>R</b> · vender ao cliente
+  </div>
+</div>
+
+<div id="oven-hud">
+  <b>FORNO</b>
+  <div id="oven-timer">Vazio</div>
+  <div id="oven-bar-bg"><div id="oven-bar"></div></div>
+</div>
+
+<div id="customers-panel" id="customers-panel"></div>
+
+<div id="notif"></div>
+
+<div id="recipe-hud">
+  <b>Receita</b>
+  <div class="recipe-step" id="step-dough">Pegar massa</div>
+  <div class="recipe-step" id="step-knead">Amassar (Q)</div>
+  <div class="recipe-step" id="step-oven">Levar ao forno</div>
+  <div class="recipe-step" id="step-bake">Aguardar</div>
+  <div class="recipe-step" id="step-take">Tirar do forno</div>
+  <div class="recipe-step" id="step-sell">Vender (R)</div>
+</div>
+
 <script type="importmap">
 {
-  "imports": {
-    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+  "imports":{
+    "three":"https://unpkg.com/three@0.160.0/build/three.module.js",
+    "three/addons/":"https://unpkg.com/three@0.160.0/examples/jsm/"
   }
 }
+
 </script>
+
+
+
+
+
 
 <script type="module">
 import * as THREE from 'three'
-import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
+import {OrbitControls} from 'three/addons/controls/OrbitControls.js'
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js'
+
+
+
+const gltfLoader = new GLTFLoader()
+
+function loadProp(url, x, y, z, scale = 1, rotationY = 0) {
+  gltfLoader.load(
+    url,
+    (gltf) => {
+      const model = gltf.scene
+      
+      model.position.set(x, y, z)
+      model.scale.set(scale, scale, scale)
+      model.rotation.y = rotationY
+
+      model.traverse((child) => {
+        if (child.isMesh) {
+          child.castShadow = true
+          child.receiveShadow = true
+        }
+      })
+
+      scene.add(model)
+    },
+    undefined, 
+    (error) => {
+      console.error('Erro ao carregar o modelo:', error)
+    }
+  )
+}
 
 //  RENDERER 
 const renderer = new THREE.WebGLRenderer({ antialias: true })
@@ -75,17 +277,23 @@ scene.add(fillLight)
 
 //  MATERIAIS 
 const M = {
-  floor:     new THREE.MeshStandardMaterial({ color: '#c49a6c', roughness: 0.85 }),
-  wall:      new THREE.MeshStandardMaterial({ color: '#f2ead8', roughness: 0.9 }),
-  woodDark:  new THREE.MeshStandardMaterial({ color: '#5c3010', roughness: 0.8 }),
-  woodMed:   new THREE.MeshStandardMaterial({ color: '#7a4a20', roughness: 0.75 }),
-  woodLight: new THREE.MeshStandardMaterial({ color: '#a06030', roughness: 0.7 }),
-  metalGrey: new THREE.MeshStandardMaterial({ color: '#888', metalness: 0.85, roughness: 0.25 }),
-  metalDark: new THREE.MeshStandardMaterial({ color: '#555', metalness: 0.9, roughness: 0.2 }),
-  glass:     new THREE.MeshStandardMaterial({ color: '#b8d8f0', metalness: 0.1, roughness: 0.05, transparent: true, opacity: 0.45 }),
-  flour:     new THREE.MeshStandardMaterial({ color: '#f5ede0', roughness: 0.95 }),
-  counter:   new THREE.MeshStandardMaterial({ color: '#f8f0e0', roughness: 0.3, metalness: 0.1 }),
+  floor: new THREE.MeshStandardMaterial({color:'#c49a6c',roughness:0.85,metalness:0.0}),
+  wall:  new THREE.MeshStandardMaterial({color:'#f2ead8',roughness:0.9}),
+  wallAccent: new THREE.MeshStandardMaterial({color:'#e8d4b0',roughness:0.8}),
+  woodDark: new THREE.MeshStandardMaterial({color:'#5c3010',roughness:0.8}),
+  woodMed:  new THREE.MeshStandardMaterial({color:'#7a4a20',roughness:0.75}),
+  woodLight:new THREE.MeshStandardMaterial({color:'#a06030',roughness:0.7}),
+  metalGrey:new THREE.MeshStandardMaterial({color:'#888',metalness:0.85,roughness:0.25}),
+  metalDark:new THREE.MeshStandardMaterial({color:'#555',metalness:0.9,roughness:0.2}),
+  glass:    new THREE.MeshStandardMaterial({color:'#b8d8f0',metalness:0.1,roughness:0.05,transparent:true,opacity:0.45}),
+  flour:    new THREE.MeshStandardMaterial({color:'#f5ede0',roughness:0.95}),
+  doughRaw: new THREE.MeshStandardMaterial({color:'#f0deb8',roughness:0.9}),
+  breadRaw: new THREE.MeshStandardMaterial({color:'#d4b87a',roughness:0.85}),
+  breadDone:new THREE.MeshStandardMaterial({color:'#7a3d10',roughness:0.6}),
+  tile:     new THREE.MeshStandardMaterial({color:'#e8ddd0',roughness:0.7}),
+  counter:  new THREE.MeshStandardMaterial({color:'#f8f0e0',roughness:0.3,metalness:0.1}),
 }
+
 
 //  HELPER 
 function add(geo, mat, x, y, z, rx = 0, ry = 0, rz = 0) {
@@ -99,21 +307,23 @@ function add(geo, mat, x, y, z, rx = 0, ry = 0, rz = 0) {
 }
 
 //  CHAO 
-add(new THREE.PlaneGeometry(50, 50), M.floor, 0, 0, 0, -Math.PI / 2)
-for (let i = -24; i <= 24; i += 2) {
-  add(new THREE.PlaneGeometry(0.05, 50),
+add(new THREE.PlaneGeometry(44.4, 35.4), M.floor, 0, 0, 4.5, -Math.PI / 2)
+for (let i = -22; i <= 22; i += 2) {
+  add(new THREE.PlaneGeometry(0.05, 35.4),
     new THREE.MeshStandardMaterial({ color: '#a07040', roughness: 1 }),
-    i, 0.002, 0, -Math.PI / 2)
+    i, 0.002, 4.5, -Math.PI / 2)
 }
 
 //  PAREDES 
-add(new THREE.BoxGeometry(50, 7, 0.4), M.wall, 0, 3.5, -22)         // fundo
-add(new THREE.BoxGeometry(0.4, 7, 44), M.wall, -22, 3.5, 0)         // esquerda
-add(new THREE.BoxGeometry(0.4, 7, 44), M.wall, 22, 3.5, 0)          // direita
-add(new THREE.BoxGeometry(18, 7, 0.4), M.wall, -16, 3.5, 22)        // frente esq
-add(new THREE.BoxGeometry(18, 7, 0.4), M.wall, 16, 3.5, 22)         // frente dir
-add(new THREE.BoxGeometry(14, 1.5, 0.15), M.woodMed, -7, 0.8, -21.8) // rodape
-add(new THREE.BoxGeometry(14, 1.5, 0.15), M.woodMed,  7, 0.8, -21.8)
+add(new THREE.BoxGeometry(44.8, 7, 0.4), M.wall, 0, 3.5, -13)         
+add(new THREE.BoxGeometry(0.4, 7, 35), M.wall, -22, 3.5, 4.5)         
+add(new THREE.BoxGeometry(0.4, 7, 35), M.wall, 22, 3.5, 4.5)          
+add(new THREE.BoxGeometry(18, 7, 0.4), M.wall, -16, 3.5, 22)        
+add(new THREE.BoxGeometry(18, 7, 0.4), M.wall, 16, 3.5, 22)         
+
+//rodapes
+add(new THREE.BoxGeometry(14, 1.5, 0.15), M.woodMed, -7, 0.8, -12.8) 
+add(new THREE.BoxGeometry(14, 1.5, 0.15), M.woodMed,  7, 0.8, -12.8)
 
 //  CANDEEIROS 
 function pendantLight(x, z) {
@@ -148,10 +358,9 @@ function addWindow(x, z, ry = 0) {
   const shaft = new THREE.PointLight('#fff5e0', 0.8, 14)
   shaft.position.set(x, 3, z + 1); scene.add(shaft)
 }
-addWindow(-12, -21.6)
-addWindow(8, -21.6)
+addWindow(-12, -12.6) 
+addWindow(8, -12.6)
 addWindow(-21.6, 0, Math.PI / 2)
-
 //  PORTA 
 add(new THREE.BoxGeometry(3.5, 6, 0.3), M.woodDark, 0, 3, 21.85)
 add(new THREE.BoxGeometry(3, 5.5, 0.1), M.woodMed, 0, 2.75, 21.8)
@@ -193,7 +402,7 @@ function buildCashRegister(x, z) {
 }
 buildCashRegister(17, 3.2)
 
-//  MESA DE TRABALHO 
+// ─── MESAS DE TRABALHO E COMIDAS ──────────────────────────────────────────
 function buildWorkTable(x, z) {
   const g = new THREE.Group()
   for (let dx of [-1.4, 1.4]) for (let dz of [-0.85, 0.85]) {
@@ -214,7 +423,19 @@ function buildWorkTable(x, z) {
   bowl.rotation.x = Math.PI; bowl.position.set(-0.8, 1.1, -0.4); g.add(bowl)
   g.position.set(x, 0, z); scene.add(g)
 }
-buildWorkTable(-12, 6)
+
+buildWorkTable(-12, 6)   // Mesa original
+buildWorkTable(-12, 0)   // Mesa central esquerda
+buildWorkTable(-12, -6)  // Mesa traseira esquerda
+buildWorkTable(8, -6)    // Mesa traseira direita
+
+loadProp('models/Bread.glb', -12, 1.15, 6, 0.5, Math.random() * Math.PI)
+loadProp('models/Burger.glb', -12, 1.15, 0, 0.5, Math.random() * Math.PI)
+loadProp('models/Pan.glb', -12, 1.15, -6, 0, 0.5)
+loadProp('models/Pizza.glb', 8, 1.15, -6, 0.5, Math.random() * Math.PI)
+
+
+loadProp('models/Kitchen.glb', 16, 2, -12, 0.5, Math.PI)
 
 //  SACOS DE FARINHA 
 function flourSack(x, z) {
@@ -229,35 +450,12 @@ function flourSack(x, z) {
 }
 flourSack(-14, 3); flourSack(-13, 4.2); flourSack(-11, 3.4)
 
-//  FORNO
-function buildOven(x, z) {
-  const g = new THREE.Group()
-  const body = new THREE.Mesh(new THREE.BoxGeometry(5, 3.5, 3),
-    new THREE.MeshStandardMaterial({ color: '#4a4a4a', metalness: 0.7, roughness: 0.3 }))
-  body.position.y = 1.75; g.add(body)
-  add(new THREE.BoxGeometry(5.1, 0.2, 3.1), M.metalGrey, 0, 3.55, 0)
-  for (let cx of [-1, 1]) {
-    const ch = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.25, 1.2, 12),
-      new THREE.MeshStandardMaterial({ color: '#3a3a3a', metalness: 0.8 }))
-    ch.position.set(cx, 4.2, 0); g.add(ch)
-  }
-  const dframe = new THREE.Mesh(new THREE.BoxGeometry(4.2, 2.4, 0.15),
-    new THREE.MeshStandardMaterial({ color: '#666', metalness: 0.8 }))
-  dframe.position.set(0, 1.8, 1.58); g.add(dframe)
-  const dglass = new THREE.Mesh(new THREE.PlaneGeometry(3.6, 1.8),
-    new THREE.MeshStandardMaterial({ color: '#111', emissive: '#c84800', emissiveIntensity: 0.4, transparent: true, opacity: 0.8 }))
-  dglass.position.set(0, 1.8, 1.66); g.add(dglass)
-  const hbar = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 3, 12), M.metalGrey)
-  hbar.rotation.z = Math.PI / 2; hbar.position.set(0, 2.5, 1.75); g.add(hbar)
-  for (let i = 0; i < 3; i++) {
-    const knob = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 0.15, 16), M.metalGrey)
-    knob.rotation.x = Math.PI / 2; knob.position.set(-1 + i, 3.0, 1.6); g.add(knob)
-  }
-  const glow = new THREE.PointLight('#ff7b2f', 4, 6)
-  glow.position.set(0, 1.5, 0.5); g.add(glow)
-  g.position.set(x, 0, z); scene.add(g)
-}
-buildOven(0, -10)
+// loadProp(url, x, y, z, scale, rotationY)
+loadProp('models/Oven.glb', 0, 0, -12, 1.25, 0)
+
+const ovenGlow = new THREE.PointLight('#ff7b2f', 3, 7)
+ovenGlow.position.set(0, 1.5, -9.5)
+scene.add(ovenGlow)
 
 //  PRATELEIRA 
 function buildShelf(x, z) {
@@ -275,12 +473,12 @@ function buildShelf(x, z) {
   }
   g.position.set(x, 0, z); scene.add(g)
 }
-buildShelf(-17, -8)
+buildShelf(-17, -12)
 
 //  QUADRO DE MENU 
-add(new THREE.BoxGeometry(4.3, 2.8, 0.1), M.woodDark, -5, 3, -21.45)
+add(new THREE.BoxGeometry(4.3, 2.8, 0.1), M.woodDark, -5, 3, -12.45)
 add(new THREE.BoxGeometry(4, 2.5, 0.15),
-  new THREE.MeshStandardMaterial({ color: '#1a2a1a', roughness: 0.9 }), -5, 3, -21.5)
+  new THREE.MeshStandardMaterial({ color: '#1a2a1a', roughness: 0.9 }), -5, 3, -12.5)
 
 //  PLANTAS
 function addPlant(x, z) {
@@ -304,20 +502,457 @@ function stool(x, z) {
 }
 stool(10, 6); stool(12, 6); stool(14, 6)
 
-//  RESIZE 
-window.addEventListener('resize', () => {
-  camera.aspect = window.innerWidth / window.innerHeight
+
+// PAYLER:
+
+
+class Baker {
+  constructor(){
+    this.group = new THREE.Group()
+
+    const skinMat  = new THREE.MeshStandardMaterial({color:'#d4956a',roughness:0.75,metalness:0.0})
+    const shirtMat = new THREE.MeshStandardMaterial({color:'#f0ece0',roughness:0.9})
+    const apronMat = new THREE.MeshStandardMaterial({color:'#dce8f0',roughness:0.85})
+    const apronStr = new THREE.MeshStandardMaterial({color:'#c0d0e8',roughness:0.85})
+    const pantsMat = new THREE.MeshStandardMaterial({color:'#3a4a5a',roughness:0.85})
+    const shoesMat = new THREE.MeshStandardMaterial({color:'#1a1008',roughness:0.7,metalness:0.1})
+    const hairMat  = new THREE.MeshStandardMaterial({color:'#2a1a08',roughness:0.9})
+    const hatMat   = new THREE.MeshStandardMaterial({color:'#fafaf2',roughness:0.8})
+    const buttonMat= new THREE.MeshStandardMaterial({color:'#88a0b8',metalness:0.3,roughness:0.5})
+
+    // ── LEGS ──
+    this.legL = new THREE.Group()
+    this.legR = new THREE.Group()
+    // upper leg
+    const thighGeo = new THREE.CapsuleGeometry(0.14,0.42,6,10)
+    const thighL = new THREE.Mesh(thighGeo, pantsMat); thighL.position.y=-0.21; this.legL.add(thighL)
+    const thighR = new THREE.Mesh(thighGeo, pantsMat); thighR.position.y=-0.21; this.legR.add(thighR)
+    // lower leg
+    const shinGeo = new THREE.CapsuleGeometry(0.11,0.4,6,10)
+    const shinL = new THREE.Mesh(shinGeo, pantsMat); shinL.position.y=-0.62; this.legL.add(shinL)
+    const shinR = new THREE.Mesh(shinGeo, pantsMat); shinR.position.y=-0.62; this.legR.add(shinR)
+    // shoes
+    const shoeGeo = new THREE.BoxGeometry(0.18,0.1,0.32)
+    const shoeL = new THREE.Mesh(shoeGeo, shoesMat); shoeL.position.set(0,-0.88,0.06); this.legL.add(shoeL)
+    const shoeR = new THREE.Mesh(shoeGeo, shoesMat); shoeR.position.set(0,-0.88,0.06); this.legR.add(shoeR)
+    // shoe toe cap
+    const toeGeo = new THREE.SphereGeometry(0.1,8,6)
+    const toeL = new THREE.Mesh(toeGeo, shoesMat); toeL.position.set(0,-0.84,0.17); toeL.scale.set(0.95,0.65,1); this.legL.add(toeL)
+    const toeR = new THREE.Mesh(toeGeo, shoesMat); toeR.position.set(0,-0.84,0.17); toeR.scale.set(0.95,0.65,1); this.legR.add(toeR)
+
+    this.legL.position.set(-0.16,0.88,0); this.group.add(this.legL)
+    this.legR.position.set( 0.16,0.88,0); this.group.add(this.legR)
+
+    // ── TORSO ──
+    // main shirt body
+    const torso = new THREE.Mesh(new THREE.CapsuleGeometry(0.32,0.55,8,14), shirtMat)
+    torso.position.y=1.22; torso.castShadow=true; this.group.add(torso)
+    // shirt collar ridge
+    const collar = new THREE.Mesh(new THREE.TorusGeometry(0.2,0.04,8,16), shirtMat)
+    collar.rotation.x=Math.PI/2; collar.position.set(0,1.62,0.05); this.group.add(collar)
+    // shirt buttons
+    for(let i=0;i<3;i++){
+      const btn = new THREE.Mesh(new THREE.CylinderGeometry(0.025,0.025,0.04,8), buttonMat)
+      btn.rotation.x=Math.PI/2; btn.position.set(0.04,1.55-i*0.18,0.32); this.group.add(btn)
+    }
+    // shirt sleeve seams
+    const seamGeo = new THREE.TorusGeometry(0.14,0.015,6,16,Math.PI)
+    const seamL = new THREE.Mesh(seamGeo, new THREE.MeshStandardMaterial({color:'#ddd8cc',roughness:0.9}))
+    seamL.position.set(-0.33,1.38,0); seamL.rotation.set(0,0,Math.PI/2); this.group.add(seamL)
+
+    // ── APRON ──
+    // apron body (front panel)
+    const apronBody = new THREE.Mesh(new THREE.BoxGeometry(0.58,0.85,0.06), apronMat)
+    apronBody.position.set(0,1.0,0.31); this.group.add(apronBody)
+    // apron bib (chest part)
+    const apronBib = new THREE.Mesh(new THREE.BoxGeometry(0.42,0.38,0.06), apronMat)
+    apronBib.position.set(0,1.55,0.31); this.group.add(apronBib)
+    // apron pocket
+    const pocket = new THREE.Mesh(new THREE.BoxGeometry(0.22,0.14,0.04), new THREE.MeshStandardMaterial({color:'#c8d8e8',roughness:0.85}))
+    pocket.position.set(-0.1,0.9,0.35); this.group.add(pocket)
+    const pocketTop = new THREE.Mesh(new THREE.BoxGeometry(0.22,0.02,0.04), new THREE.MeshStandardMaterial({color:'#a8c0d4'}))
+    pocketTop.position.set(-0.1,0.975,0.35); this.group.add(pocketTop)
+    // apron strings at waist
+    const strL = new THREE.Mesh(new THREE.BoxGeometry(0.06,0.04,0.5), apronStr)
+    strL.rotation.y=0.3; strL.position.set(-0.35,1.0,0.15); this.group.add(strL)
+    const strR = strL.clone(); strR.rotation.y=-0.3; strR.position.set(0.35,1.0,0.15); this.group.add(strR)
+    // neck strap
+    const neckStr = new THREE.Mesh(new THREE.CylinderGeometry(0.02,0.02,0.55,8), apronStr)
+    neckStr.rotation.z=0.15; neckStr.position.set(0,1.68,0.18); this.group.add(neckStr)
+    // flour dust on apron
+    const flourDust = new THREE.Mesh(new THREE.PlaneGeometry(0.35,0.25), new THREE.MeshStandardMaterial({color:'#f0ece4',transparent:true,opacity:0.5,roughness:1}))
+    flourDust.position.set(-0.05,1.0,0.345); this.group.add(flourDust)
+
+    // ── ARMS ──
+    this.armLGroup = new THREE.Group()
+    this.armRGroup = new THREE.Group()
+
+    // upper arm
+    const uArmGeo = new THREE.CapsuleGeometry(0.115,0.36,6,10)
+    const uArmL = new THREE.Mesh(uArmGeo, shirtMat); uArmL.position.y=-0.18; this.armLGroup.add(uArmL)
+    const uArmR = new THREE.Mesh(uArmGeo, shirtMat); uArmR.position.y=-0.18; this.armRGroup.add(uArmR)
+    // forearm
+    const fArmGeo = new THREE.CapsuleGeometry(0.095,0.32,6,10)
+    const fArmL = new THREE.Mesh(fArmGeo, skinMat); fArmL.position.y=-0.54; this.armLGroup.add(fArmL)
+    const fArmR = new THREE.Mesh(fArmGeo, skinMat); fArmR.position.y=-0.54; this.armRGroup.add(fArmR)
+    // rolled sleeve cuff
+    const cuffGeo = new THREE.CylinderGeometry(0.12,0.115,0.1,12)
+    const cuffL = new THREE.Mesh(cuffGeo, new THREE.MeshStandardMaterial({color:'#e0dcd0',roughness:0.8}))
+    cuffL.position.y=-0.38; this.armLGroup.add(cuffL)
+    const cuffR = cuffL.clone(); this.armRGroup.add(cuffR)
+    // hands
+    const handGeo = new THREE.SphereGeometry(0.1,10,8)
+    const handL = new THREE.Mesh(handGeo, skinMat); handL.position.y=-0.72; handL.scale.set(1,0.85,1.1); this.armLGroup.add(handL)
+    const handR = new THREE.Mesh(handGeo, skinMat); handR.position.y=-0.72; handR.scale.set(1,0.85,1.1); this.armRGroup.add(handR)
+    // thumb
+    const thumbGeo = new THREE.CapsuleGeometry(0.035,0.08,4,6)
+    const thumbL = new THREE.Mesh(thumbGeo, skinMat); thumbL.position.set(0.1,-0.7,0.04); thumbL.rotation.z=0.6; this.armLGroup.add(thumbL)
+    const thumbR = new THREE.Mesh(thumbGeo, skinMat); thumbR.position.set(-0.1,-0.7,0.04); thumbR.rotation.z=-0.6; this.armRGroup.add(thumbR)
+
+    this.armLGroup.position.set(-0.44,1.5,0); this.armLGroup.rotation.z= 0.25; this.group.add(this.armLGroup)
+    this.armRGroup.position.set( 0.44,1.5,0); this.armRGroup.rotation.z=-0.25; this.group.add(this.armRGroup)
+
+    // ── NECK ──
+    const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.13,0.16,0.22,12), skinMat)
+    neck.position.set(0,1.64,0); this.group.add(neck)
+
+    // ── HEAD ──
+    this.headGroup = new THREE.Group()
+    // skull
+    const skull = new THREE.Mesh(new THREE.SphereGeometry(0.26,16,14), skinMat)
+    skull.scale.set(1,1.08,0.96); this.headGroup.add(skull)
+    // jaw / chin
+    const jaw = new THREE.Mesh(new THREE.SphereGeometry(0.2,12,10), skinMat)
+    jaw.position.set(0,-0.1,0.06); jaw.scale.set(0.9,0.65,0.95); this.headGroup.add(jaw)
+    // eyes
+    const eyeWhiteGeo = new THREE.SphereGeometry(0.045,10,8)
+    const eyeWhiteMat = new THREE.MeshStandardMaterial({color:'#f8f4ee',roughness:0.6})
+    const eyeIrisMat  = new THREE.MeshStandardMaterial({color:'#3a2808',roughness:0.5})
+    const eyePupilMat = new THREE.MeshStandardMaterial({color:'#080400',roughness:0.3})
+    for(let ex of [-0.1,0.1]){
+      const eW = new THREE.Mesh(eyeWhiteGeo, eyeWhiteMat); eW.position.set(ex,0.06,0.22); this.headGroup.add(eW)
+      const eI = new THREE.Mesh(new THREE.SphereGeometry(0.03,8,8), eyeIrisMat); eI.position.set(ex,0.06,0.255); this.headGroup.add(eI)
+      const eP = new THREE.Mesh(new THREE.SphereGeometry(0.018,6,6), eyePupilMat); eP.position.set(ex,0.06,0.265); this.headGroup.add(eP)
+      // eyebrow
+      const brow = new THREE.Mesh(new THREE.BoxGeometry(0.08,0.018,0.015), new THREE.MeshStandardMaterial({color:'#1a0e04',roughness:0.9}))
+      brow.position.set(ex,0.115,0.215); brow.rotation.z=ex<0?0.15:-0.15; this.headGroup.add(brow)
+    }
+    // nose
+    const nose = new THREE.Mesh(new THREE.SphereGeometry(0.04,8,6), skinMat)
+    nose.position.set(0,-0.02,0.265); nose.scale.set(1.1,0.8,1); this.headGroup.add(nose)
+    // mouth
+    const mouthGeo = new THREE.TorusGeometry(0.05,0.014,6,12,Math.PI)
+    const mouth = new THREE.Mesh(mouthGeo, new THREE.MeshStandardMaterial({color:'#b06050',roughness:0.8}))
+    mouth.position.set(0,-0.085,0.245); mouth.rotation.x=0.3; this.headGroup.add(mouth)
+    // ears
+    for(let ex of [-1,1]){
+      const ear = new THREE.Mesh(new THREE.SphereGeometry(0.06,8,8), skinMat)
+      ear.position.set(ex*0.265,0.0,0.0); ear.scale.set(0.5,0.7,0.6); this.headGroup.add(ear)
+    }
+    // hair (short dark)
+    const hairCapGeo = new THREE.SphereGeometry(0.265,16,12,0,Math.PI*2,0,Math.PI*0.55)
+    const hairCap = new THREE.Mesh(hairCapGeo, hairMat)
+    hairCap.position.set(0,0.04,0); this.headGroup.add(hairCap)
+    // sideburns
+    for(let sx of [-1,1]){
+      const sb = new THREE.Mesh(new THREE.BoxGeometry(0.06,0.1,0.06), hairMat)
+      sb.position.set(sx*0.26,-0.08,0.1); this.headGroup.add(sb)
+    }
+    // mustache
+    for(let mx of [-1,1]){
+      const mus = new THREE.Mesh(new THREE.SphereGeometry(0.038,8,6), hairMat)
+      mus.position.set(mx*0.055,-0.038,0.255); mus.scale.set(1.2,0.7,0.8); this.headGroup.add(mus)
+    }
+
+    this.headGroup.position.set(0,1.9,0)
+    this.group.add(this.headGroup)
+
+    // ── CHEF HAT (toque) ──
+    const hatGroup = new THREE.Group()
+    // brim band
+    const hatBand = new THREE.Mesh(new THREE.CylinderGeometry(0.285,0.285,0.16,20), new THREE.MeshStandardMaterial({color:'#e8e8e0',roughness:0.7}))
+    hatBand.position.y=0; hatGroup.add(hatBand)
+    // white band stripe
+    const stripe = new THREE.Mesh(new THREE.CylinderGeometry(0.289,0.289,0.05,20), new THREE.MeshStandardMaterial({color:'#ffffff',roughness:0.7}))
+    stripe.position.y=0.03; hatGroup.add(stripe)
+    // puffy top (toque shape - stacked cylinders)
+    const hat1 = new THREE.Mesh(new THREE.CylinderGeometry(0.27,0.275,0.18,16), hatMat); hat1.position.y=0.17; hatGroup.add(hat1)
+    const hat2 = new THREE.Mesh(new THREE.CylinderGeometry(0.265,0.27,0.16,16), hatMat); hat2.position.y=0.33; hatGroup.add(hat2)
+    const hat3 = new THREE.Mesh(new THREE.CylinderGeometry(0.255,0.265,0.16,16), hatMat); hat3.position.y=0.47; hatGroup.add(hat3)
+    const hat4 = new THREE.Mesh(new THREE.CylinderGeometry(0.24,0.255,0.16,16), hatMat); hat4.position.y=0.61; hatGroup.add(hat4)
+    const hatTop = new THREE.Mesh(new THREE.SphereGeometry(0.24,16,8,0,Math.PI*2,0,Math.PI*0.5), hatMat)
+    hatTop.position.y=0.69; hatGroup.add(hatTop)
+    // shadow under hat
+    const hatShadow = new THREE.Mesh(new THREE.CylinderGeometry(0.29,0.285,0.04,20), new THREE.MeshStandardMaterial({color:'#d8d4cc',roughness:0.8}))
+    hatShadow.position.y=0.02; hatGroup.add(hatShadow)
+
+    hatGroup.position.set(0,2.165,0)
+    this.group.add(hatGroup)
+
+    // shadow blob under player
+    const shadow = new THREE.Mesh(new THREE.CircleGeometry(0.42,20), new THREE.MeshStandardMaterial({color:'#8a6040',transparent:true,opacity:0.35,roughness:1}))
+    shadow.rotation.x=-Math.PI/2; shadow.position.y=0.005; this.group.add(shadow)
+
+    this.hasDough=false; this.hasKneadedDough=false; this.hasBread=false
+    this.item=null; this.kneadCount=0
+    this._walkT=0
+
+    scene.add(this.group)
+  }
+
+
+  updateItem(){
+    if(this.item) this.armRGroup.remove(this.item)
+    this.item=null
+    if(this.hasDough){
+      this.item=new THREE.Mesh(new THREE.SphereGeometry(0.18,12,10), M.doughRaw)
+    } else if(this.hasKneadedDough){
+      const g=new THREE.Group()
+      const ball=new THREE.Mesh(new THREE.SphereGeometry(0.18,12,10), new THREE.MeshStandardMaterial({color:'#c8a858',roughness:0.85}))
+      g.add(ball)
+      // small flour marks
+      for(let i=0;i<3;i++){
+        const spot=new THREE.Mesh(new THREE.SphereGeometry(0.03,6,4), new THREE.MeshStandardMaterial({color:'#f0ece4',transparent:true,opacity:0.7}))
+        spot.position.set(Math.cos(i*2.1)*0.12, Math.sin(i*1.3)*0.1, 0.14); g.add(spot)
+      }
+      this.item=g
+    } else if(this.hasBread){
+      const g=new THREE.Group()
+      const loaf=new THREE.Mesh(new THREE.CylinderGeometry(0.18,0.2,0.55,16), M.breadDone); loaf.rotation.z=Math.PI/2; g.add(loaf)
+      const end1=new THREE.Mesh(new THREE.SphereGeometry(0.18,10,8), new THREE.MeshStandardMaterial({color:'#6a2e08',roughness:0.55})); end1.position.set(0.275,0,0); end1.scale.set(0.5,1,1); g.add(end1)
+      const end2=end1.clone(); end2.position.set(-0.275,0,0); g.add(end2)
+      // score marks on bread
+      for(let i=0;i<3;i++){
+        const score=new THREE.Mesh(new THREE.BoxGeometry(0.02,0.22,0.04), new THREE.MeshStandardMaterial({color:'#3a1204',roughness:0.7}))
+        score.position.set(-0.12+i*0.12,0.17,0); g.add(score)
+      }
+      this.item=g
+    }
+    if(this.item){ this.item.position.set(0.1,-0.75,0.12); this.armRGroup.add(this.item) }
+  }
+
+  walkAnim(dt){
+    this._walkT += dt
+    const t = this._walkT
+    if(moving){
+      // leg swing
+      this.legL.rotation.x = Math.sin(t*6)*0.38
+      this.legR.rotation.x = -Math.sin(t*6)*0.38
+      // arm counter-swing
+      this.armLGroup.rotation.x = Math.sin(t*6)*0.28
+      this.armRGroup.rotation.x = -Math.sin(t*6)*0.28
+      // subtle body bob
+      this.group.position.y = Math.abs(Math.sin(t*6))*0.04
+    } else {
+      // idle sway
+      this.legL.rotation.x += (0-this.legL.rotation.x)*0.12
+      this.legR.rotation.x += (0-this.legR.rotation.x)*0.12
+      this.armLGroup.rotation.x += (0-this.armLGroup.rotation.x)*0.12
+      this.armRGroup.rotation.x += (0-this.armRGroup.rotation.x)*0.12
+      this.group.position.y += (0-this.group.position.y)*0.1
+      // gentle idle head bob
+      this.headGroup.rotation.z = Math.sin(t*0.8)*0.02
+    }
+    // always slightly sway arms sideways
+    this.armLGroup.rotation.z = 0.25 + Math.sin(t*0.5)*0.03
+    this.armRGroup.rotation.z = -0.25 - Math.sin(t*0.5)*0.03
+  }
+}
+const player = new Baker()
+let px=0, pz=15, pAngle=0, moving=false
+
+
+// pão no forno:
+let ovenBread=null, ovenTime=0, ovenTotal=12
+class OvenBread{
+  constructor(){
+    this.mesh=new THREE.Mesh(new THREE.CylinderGeometry(0.3,0.32,0.28,16), M.breadRaw)
+    this.mesh.position.set(0,1.5,-10); scene.add(this.mesh)
+    this.time=0; this.done=false
+  }
+  update(dt){
+    this.time+=dt
+    const t=Math.min(this.time/ovenTotal,1)
+    this.mesh.material.color.lerp(new THREE.Color('#7a3010'),t)
+    if(t>=1 && !this.done){ this.done=true; notify('🔔 Pão pronto! Pressiona SPACE') }
+    return t>=1
+  }
+  remove(){ scene.remove(this.mesh) }
+}
+
+//clientes:
+
+let customers = []
+let spawnTimer = 0
+let nextSpawnTime = 10
+function spawnCustomer() {
+  //  mais tarde
+}
+
+
+
+
+
+
+
+
+
+//dinheiro:
+let money=0
+function addMoney(amount){
+  money+=amount
+  document.getElementById('money').textContent=money.toFixed(2).replace('.',',')+' €'
+  // flash
+  const m=document.getElementById('money-box')
+  m.style.boxShadow='0 0 30px #c8960c, inset 0 0 20px rgba(255,220,100,0.3)'
+  setTimeout(()=>m.style.boxShadow='',600)
+}
+
+// notificações
+let notifTimer=null
+function notify(msg){
+  const n=document.getElementById('notif')
+  n.textContent=msg; n.style.opacity='1'
+  if(notifTimer) clearTimeout(notifTimer)
+  notifTimer=setTimeout(()=>n.style.opacity='0',2200)
+}
+
+function updateRecipe(){
+  const steps=['step-dough','step-knead','step-oven','step-bake','step-take','step-sell']
+  const idx = player.hasBread?4 : ovenBread&&ovenBread.done?3 : ovenBread?3 : player.hasKneadedDough?2 : player.hasDough?1 : 0
+  steps.forEach((s,i)=>{
+    const el=document.getElementById(s)
+    el.className='recipe-step'+(i<idx?' done':i===idx?' active':'')
+  })
+}
+
+
+//keys
+const keys={}
+window.addEventListener('keydown',e=>{
+  keys[e.code]=true
+  // E: pegar massa
+  if(e.code==='KeyE' && !player.hasDough && !player.hasKneadedDough && !player.hasBread){
+    if(dist(px,pz,-12,6)<3.5){ player.hasDough=true; player.kneadCount=0; player.updateItem(); notify(' Massa apanhada! 🥣 Amassa com Q') }
+  }
+  // Q: amassar
+  if(e.code==='KeyQ' && player.hasDough){
+    if(dist(px,pz,-12,6)<3.5){
+      player.kneadCount++
+      if(player.kneadCount>=3){ player.hasDough=false; player.hasKneadedDough=true; player.updateItem(); notify('Massa amassada! Agora leva ao forno (F)') }
+      else { notify(`💪 A amassar... (${player.kneadCount}/3)`) }
+    }
+  }
+  // F: forno
+  if(e.code==='KeyF' && player.hasKneadedDough && !ovenBread){
+    if(dist(px,pz,0,-10)<4){ player.hasKneadedDough=false; player.updateItem(); ovenBread=new OvenBread(); notify('No forno 🔥! Aguarda 12 segundos...') }
+  }
+  // SPACE: tirar
+  if(e.code==='Space'){
+    if(ovenBread && ovenBread.done && dist(px,pz,0,-10)<4){ ovenBread.remove(); ovenBread=null; player.hasBread=true; player.updateItem(); notify('🍞 Pão pronto! Vende a um cliente (R)') }
+  }
+  // R: vender
+  if(e.code==='KeyR' && player.hasBread){
+    let sold=false
+    for(let c of customers){
+      if(!c.satisfied&&!c.angry && dist(px,pz,c.group.position.x,c.group.position.z)<4){
+        player.hasBread=false; player.updateItem()
+        addMoney(c.price); c.leave(true)
+        sold=true; break
+      }
+    }
+    if(!sold) notify('❗ Chega-te a um cliente!')
+  }
+})
+window.addEventListener('keyup',e=>keys[e.code]=false)
+
+function dist(x1,z1,x2,z2){ return Math.hypot(x1-x2,z1-z2) }
+
+
+
+// ─── UI UPDATE ────────────────────────────────────────────────────────────
+function updateUI(){
+  let s='Mãos livres'
+  if(player.hasDough) s='🥣 Com massa crua'
+  else if(player.hasKneadedDough) s='💪 Massa amassada'
+  else if(player.hasBread) s='🍞 Com pão'
+  document.getElementById('state').textContent=s
+
+  if(ovenBread){
+    const t=Math.min(ovenBread.time,ovenTotal)
+    document.getElementById('oven-timer').textContent='A cozinhar... '+(ovenTotal-t).toFixed(1)+'s'
+    document.getElementById('oven-bar').style.width=(t/ovenTotal*100)+'%'
+  } else {
+    document.getElementById('oven-timer').textContent='Vazio'
+    document.getElementById('oven-bar').style.width='0%'
+  }
+  updateRecipe()
+}
+
+// ─── RESIZE ───────────────────────────────────────────────────────────────
+window.addEventListener('resize',()=>{
+  camera.aspect=innerWidth/innerHeight
   camera.updateProjectionMatrix()
-  renderer.setSize(window.innerWidth, window.innerHeight)
+  renderer.setSize(innerWidth,innerHeight)
 })
 
-// LOOP 
-function animate() {
+// ─── LOOP ─────────────────────────────────────────────────────────────────
+const clock=new THREE.Clock()
+function animate(){
   requestAnimationFrame(animate)
+  const dt=clock.getDelta()
+
+  // movement
+  moving=false
+  const speed=0.12
+  if(keys['KeyW']){ pz-=speed; moving=true; pAngle=Math.PI }
+  if(keys['KeyS']){ pz+=speed; moving=true; pAngle=0 }
+  
+  if(keys['KeyA']){ px-=speed; moving=true; pAngle=-Math.PI/2 }
+  if(keys['KeyD']){ px+=speed; moving=true; pAngle=Math.PI/2 }
+  
+  if(keys['KeyW']&&keys['KeyD']) pAngle=Math.PI*0.75
+  if(keys['KeyW']&&keys['KeyA']) pAngle=-Math.PI*0.75
+
+  px=Math.max(-20,Math.min(20,px))
+  pz=Math.max(-19,Math.min(20,pz))
+  player.group.position.set(px,0,pz)
+  if(moving) player.group.rotation.y+=(pAngle-player.group.rotation.y)*0.15
+  player.walkAnim(dt)
+
+  // oven
+  if(ovenBread) ovenBread.update(dt)
+
+  // customers
+  spawnTimer+=dt
+  if(spawnTimer>=nextSpawnTime){ spawnTimer=0; nextSpawnTime=10+Math.random()*15; spawnCustomer() }
+  for(let c of customers) c.update(dt)
+
+  updateUI()
   controls.update()
-  renderer.render(scene, camera)
+  renderer.render(scene,camera)
 }
 animate()
+
+// initial spawn
+setTimeout(spawnCustomer, 2000)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 </script>
 
 </body>
