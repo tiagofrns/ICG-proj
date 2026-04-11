@@ -138,7 +138,7 @@ canvas{display:block}
 
 <div id="hud">
   <div id="money-box">
-    <div id="money-label">Caixa</div>
+    <div id="money-label">Caixa Registadora</div>
     <span id="money">0,00 €</span>
   </div>
   <div id="state-box">
@@ -244,15 +244,7 @@ scene.fog = new THREE.FogExp2(0xf0e8dc, 0.018)
 
 //  CAMARA 
 const camera = new THREE.PerspectiveCamera(65, window.innerWidth / window.innerHeight, 0.1, 200)
-camera.position.set(0, 18, 22)
 
-const controls = new OrbitControls(camera, renderer.domElement)
-controls.target.set(0, 1, 0)
-controls.maxPolarAngle = Math.PI * 0.48
-controls.minDistance = 8
-controls.maxDistance = 40
-controls.enableDamping = true
-controls.dampingFactor = 0.08
 
 //  LUZES 
 const sun = new THREE.DirectionalLight(0xfff5e0, 2.5)
@@ -915,9 +907,15 @@ function animate(){
   if(keys['KeyW']&&keys['KeyA']) pAngle=-Math.PI*0.75
 
   px=Math.max(-20,Math.min(20,px))
-  pz=Math.max(-19,Math.min(20,pz))
+  pz=Math.max(-10,Math.min(20,pz)) 
   player.group.position.set(px,0,pz)
-  if(moving) player.group.rotation.y+=(pAngle-player.group.rotation.y)*0.15
+
+  if(moving) {
+    let diff = pAngle - player.group.rotation.y;
+    while (diff < -Math.PI) diff += Math.PI * 2;
+    while (diff > Math.PI) diff -= Math.PI * 2;
+    player.group.rotation.y += diff * 0.15;
+  }
   player.walkAnim(dt)
 
   // oven
@@ -928,8 +926,15 @@ function animate(){
   if(spawnTimer>=nextSpawnTime){ spawnTimer=0; nextSpawnTime=10+Math.random()*15; spawnCustomer() }
   for(let c of customers) c.update(dt)
 
+  //camara 3 pessoa
+  const offset = new THREE.Vector3(0, 8, 12)
+  offset.add(player.group.position)
+  camera.position.lerp(offset, 0.1)
+  camera.lookAt(player.group.position.x, player.group.position.y + 1, player.group.position.z)
+
+
   updateUI()
-  controls.update()
+  
   renderer.render(scene,camera)
 }
 animate()
