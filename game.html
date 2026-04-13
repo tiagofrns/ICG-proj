@@ -144,6 +144,9 @@ canvas{display:block}
   <div id="state-box">
     <b>Padeiro</b>
     <span id="state">Mãos livres</span>
+    <div style="margin-top:8px; height:6px; background:rgba(255,255,255,0.2); border-radius:3px; overflow:hidden;">
+      <div id="stamina-bar" style="height:100%; width:100%; background:linear-gradient(90deg, #44ccff, #0088ff); transition: width 0.1s;"></div>
+    </div>
   </div>
   <div id="controls-box">
     <b> Padaria Artesanal</b><br>
@@ -247,25 +250,41 @@ const camera = new THREE.PerspectiveCamera(65, window.innerWidth / window.innerH
 
 
 //  LUZES 
-const sun = new THREE.DirectionalLight(0xfff5e0, 2.5)
-sun.position.set(20, 35, 25)
-sun.castShadow = true
-sun.shadow.mapSize.set(2048, 2048)
-sun.shadow.camera.near = 0.5
-sun.shadow.camera.far = 100
-sun.shadow.camera.left = -30
-sun.shadow.camera.right = 30
-sun.shadow.camera.top = 30
-sun.shadow.camera.bottom = -30
-sun.shadow.bias = -0.001
-scene.add(sun)
+scene.add(new THREE.AmbientLight(0xfff0e0, 1.2)) 
+scene.add(new THREE.HemisphereLight(0xffeedd, 0x886655, 0.8)) 
 
-scene.add(new THREE.AmbientLight(0xfff0e0, 0.6))
-scene.add(new THREE.HemisphereLight(0xffe8cc, 0x8b6040, 0.4))
-
-const fillLight = new THREE.DirectionalLight(0xffe0b0, 0.5)
-fillLight.position.set(-15, 8, -20)
+const fillLight = new THREE.DirectionalLight(0xfff5e0, 1.5)
+fillLight.position.set(0, 20, 20)
+fillLight.castShadow = true // Esta luz também faz algumas sombras muito suaves
+fillLight.shadow.mapSize.set(1024, 1024)
+fillLight.shadow.bias = -0.001
 scene.add(fillLight)
+
+const lightWork = new THREE.PointLight('#ffc880', 6, 30) // Mais alcance
+lightWork.position.set(-10, 4, -2)
+scene.add(lightWork)
+
+const lightCounter = new THREE.PointLight('#ffc880', 6, 30)
+lightCounter.position.set(10, 4, 4)
+scene.add(lightCounter)
+
+const lightEntrance = new THREE.PointLight('#ffc880', 5, 30)
+lightEntrance.position.set(0, 4, 15)
+scene.add(lightEntrance)
+
+
+const moon = new THREE.DirectionalLight(0x88aabb, 0.2)
+moon.position.set(20, 35, 25)
+moon.castShadow = true
+moon.shadow.mapSize.set(1024, 1024)
+moon.shadow.camera.near = 0.5
+moon.shadow.camera.far = 100
+moon.shadow.camera.left = -30
+moon.shadow.camera.right = 30
+moon.shadow.camera.top = 30
+moon.shadow.camera.bottom = -30
+moon.shadow.bias = -0.001
+scene.add(moon)
 
 //  MATERIAIS 
 const M = {
@@ -307,11 +326,11 @@ for (let i = -22; i <= 22; i += 2) {
 }
 
 //  PAREDES 
-add(new THREE.BoxGeometry(44.8, 7, 0.4), M.wall, 0, 3.5, -13)         
-add(new THREE.BoxGeometry(0.4, 7, 35), M.wall, -22, 3.5, 4.5)         
-add(new THREE.BoxGeometry(0.4, 7, 35), M.wall, 22, 3.5, 4.5)          
-add(new THREE.BoxGeometry(18, 7, 0.4), M.wall, -16, 3.5, 22)        
-add(new THREE.BoxGeometry(18, 7, 0.4), M.wall, 16, 3.5, 22)         
+add(new THREE.BoxGeometry(44.8, 16, 0.4), M.wall, 0, 8, -13)         
+add(new THREE.BoxGeometry(0.4, 16, 35), M.wall, -22, 8, 4.5)         
+add(new THREE.BoxGeometry(0.4, 16, 35), M.wall, 22, 8, 4.5)          
+add(new THREE.BoxGeometry(18, 16, 0.4), M.wall, -16, 8, 22)        
+add(new THREE.BoxGeometry(18, 16, 0.4), M.wall, 16, 8, 22)       
 
 //rodapes
 add(new THREE.BoxGeometry(14, 1.5, 0.15), M.woodMed, -7, 0.8, -12.8) 
@@ -320,16 +339,29 @@ add(new THREE.BoxGeometry(14, 1.5, 0.15), M.woodMed,  7, 0.8, -12.8)
 //  CANDEEIROS 
 function pendantLight(x, z) {
   add(new THREE.CylinderGeometry(0.02, 0.02, 1.5), M.metalDark, x, 6.2, z)
+  
   const shade = new THREE.Mesh(new THREE.ConeGeometry(0.4, 0.5, 16, 1, true), M.metalGrey)
   shade.rotation.x = Math.PI; shade.position.set(x, 5.3, z); scene.add(shade)
+  
   const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.12, 8, 8),
-    new THREE.MeshStandardMaterial({ emissive: '#ffe8a0', emissiveIntensity: 3, color: '#fff' }))
+    new THREE.MeshStandardMaterial({ emissive: '#ffaa44', emissiveIntensity: 4, color: '#fff' }))
   bulb.position.set(x, 5.2, z); scene.add(bulb)
-  const pl = new THREE.PointLight('#ffd580', 1.5, 12)
-  pl.position.set(x, 4.8, z); scene.add(pl)
 }
-pendantLight(-10, -5); pendantLight(0, -5); pendantLight(10, -5)
-pendantLight(-5, 5);   pendantLight(5, 5)
+
+pendantLight(-12, 0)  
+pendantLight(-12, -6)  
+pendantLight(8, -6)    
+pendantLight(14, 4)    
+
+pendantLight(0, -6)
+pendantLight(0, 2)
+pendantLight(0, 10)
+
+pendantLight(-10, 16)
+pendantLight(10, 16)
+pendantLight(0, 18)
+
+
 
 //  JANELAS 
 function addWindow(x, z, ry = 0) {
@@ -394,7 +426,7 @@ function buildCashRegister(x, z) {
 }
 buildCashRegister(17, 3.2)
 
-// ─── MESAS DE TRABALHO E COMIDAS ──────────────────────────────────────────
+//  MESAS DE TRABALHO E COMIDAS 
 function buildWorkTable(x, z) {
   const g = new THREE.Group()
   for (let dx of [-1.4, 1.4]) for (let dz of [-0.85, 0.85]) {
@@ -445,8 +477,12 @@ flourSack(-14, 3); flourSack(-13, 4.2); flourSack(-11, 3.4)
 // loadProp(url, x, y, z, scale, rotationY)
 loadProp('models/Oven.glb', 0, 0, -12, 1.25, 0)
 
-const ovenGlow = new THREE.PointLight('#ff7b2f', 3, 7)
-ovenGlow.position.set(0, 1.5, -9.5)
+const ovenGlow = new THREE.PointLight('#ff5500', 4, 12)
+ovenGlow.position.set(0, 1.2, -11.5)
+ovenGlow.castShadow = false
+ovenGlow.shadow.mapSize.width = 1024
+ovenGlow.shadow.mapSize.height = 1024
+ovenGlow.shadow.bias = -0.002
 scene.add(ovenGlow)
 
 //  PRATELEIRA 
@@ -759,7 +795,7 @@ let ovenBread=null, ovenTime=0, ovenTotal=12
 class OvenBread{
   constructor(){
     this.mesh=new THREE.Mesh(new THREE.CylinderGeometry(0.3,0.32,0.28,16), M.breadRaw)
-    this.mesh.position.set(0,1.5,-10); scene.add(this.mesh)
+    this.mesh.position.set(0,1.2,-11.5); scene.add(this.mesh) 
     this.time=0; this.done=false
   }
   update(dt){
@@ -774,15 +810,79 @@ class OvenBread{
 
 //clientes:
 
-let customers = []
-let spawnTimer = 0
-let nextSpawnTime = 10
-function spawnCustomer() {
-  //  mais tarde
+const NAMES=['Ana','João','Maria','Pedro','Sofia','Carlos','Ines','Rui']
+const ORDERS=['1 baguete','2 croissants','pão de centeio','pastel de nata','brioche','pão alentejano']
+const PRICES={
+  '1 baguete':1.80,
+  '2 croissants':2.40,
+  'pão de centeio':2.20,
+  'pastel de nata':1.50,
+  'brioche':2.80,
+  'pão alentejano':3.20
 }
 
+class Customer{
+  constructor(id){
+    this.id=id
+    this.name=NAMES[Math.floor(Math.random()*NAMES.length)]
+    this.order=ORDERS[Math.floor(Math.random()*ORDERS.length)]
+    this.price=PRICES[this.order]
+    this.patience=1.0
+    this.patienceTime=40+Math.random()*20
+    this.satisfied=false; this.angry=false
+    // 3D customer
+    this.group=new THREE.Group()
+    const bodyColor=['#cc6644','#4466cc','#44aa44','#cc44aa','#aa8844'][id%5]
+    const body=new THREE.Mesh(new THREE.CapsuleGeometry(0.3,0.9,6,8), new THREE.MeshStandardMaterial({color:bodyColor}))
+    body.position.y=1.0; body.castShadow=true; this.group.add(body)
+    const head=new THREE.Mesh(new THREE.SphereGeometry(0.25,10,8), new THREE.MeshStandardMaterial({color:'#e8c898'}))
+    head.position.y=1.75; this.group.add(head)
+    // speech bubble indicator
+    this.bubble=new THREE.Mesh(new THREE.SphereGeometry(0.12,8,8), new THREE.MeshStandardMaterial({color:'#ffdd44',emissive:'#ffaa00',emissiveIntensity:0.5}))
+    this.bubble.position.set(0.3,2.2,0); this.group.add(this.bubble)
+    this.group.position.set(-3+id*2.5,0,17+Math.random()*1.5)
+    scene.add(this.group)
+    this.createCard()
+  }
+  createCard(){
+    const panel=document.getElementById('customers-panel')
+    this.card=document.createElement('div')
+    this.card.className='customer-card'
+    this.card.innerHTML=`
+      <div class="cname">👤 ${this.name}</div>
+      <div class="order">📋 ${this.order}</div>
+      <div style="color:#c8a060;font-size:11px">💰 ${this.price.toFixed(2)} €</div>
+      <div class="patience-bar"><div class="patience" style="width:100%"></div></div>
+    `
+    panel.appendChild(this.card)
+    this.patienceEl=this.card.querySelector('.patience')
+  }
+  update(dt){
+    if(this.satisfied||this.angry) return
+    this.patience-=dt/this.patienceTime
+    if(this.patience<0) this.patience=0
+    this.patienceEl.style.width=(this.patience*100)+'%'
+    if(this.patience<0.3) this.patienceEl.className='patience low'
+    if(this.patience<=0){ this.leave(false) }
+    // bob animation
+    this.group.position.y=Math.sin(Date.now()*0.002+this.id)*0.04
+    this.bubble.material.emissiveIntensity=0.5+Math.sin(Date.now()*0.003)*0.3
+    if(this.patience<0.3) this.card.classList.add('urgent')
+  }
+  leave(paid){
+    this.satisfied=paid; this.angry=!paid
+    if(paid) notify(`✅ ${this.name} ficou feliz! +${this.price.toFixed(2)}€`)
+    else notify(`😠 ${this.name} foi embora...`)
+    setTimeout(()=>{ scene.remove(this.group); this.card.remove(); removeCustomer(this.id) },800)
+  }
+}
 
-
+let customers=[], nextCustomerId=0, nextSpawnTime=8, spawnTimer=0
+function removeCustomer(id){ customers=customers.filter(c=>c.id!==id) }
+function spawnCustomer(){
+  if(customers.length>=4) return
+  customers.push(new Customer(nextCustomerId++))
+}
 
 
 
@@ -837,11 +937,11 @@ window.addEventListener('keydown',e=>{
   }
   // F: forno
   if(e.code==='KeyF' && player.hasKneadedDough && !ovenBread){
-    if(dist(px,pz,0,-10)<4){ player.hasKneadedDough=false; player.updateItem(); ovenBread=new OvenBread(); notify('No forno 🔥! Aguarda 12 segundos...') }
+    if(dist(px,pz,0,-12)<5){ player.hasKneadedDough=false; player.updateItem(); ovenBread=new OvenBread(); notify('No forno 🔥! Aguarda 12 segundos...') }
   }
   // SPACE: tirar
   if(e.code==='Space'){
-    if(ovenBread && ovenBread.done && dist(px,pz,0,-10)<4){ ovenBread.remove(); ovenBread=null; player.hasBread=true; player.updateItem(); notify('🍞 Pão pronto! Vende a um cliente (R)') }
+    if(ovenBread && ovenBread.done && dist(px,pz,0,-12)<5){ ovenBread.remove(); ovenBread=null; player.hasBread=true; player.updateItem(); notify('🍞 Pão pronto! Vende a um cliente (R)') }
   }
   // R: vender
   if(e.code==='KeyR' && player.hasBread){
@@ -862,7 +962,7 @@ function dist(x1,z1,x2,z2){ return Math.hypot(x1-x2,z1-z2) }
 
 
 
-// ─── UI UPDATE ────────────────────────────────────────────────────────────
+//  UI UPDATE 
 function updateUI(){
   let s='Mãos livres'
   if(player.hasDough) s='🥣 Com massa crua'
@@ -881,42 +981,53 @@ function updateUI(){
   updateRecipe()
 }
 
-// ─── RESIZE ───────────────────────────────────────────────────────────────
+//  RESIZE 
 window.addEventListener('resize',()=>{
   camera.aspect=innerWidth/innerHeight
   camera.updateProjectionMatrix()
   renderer.setSize(innerWidth,innerHeight)
 })
 
-// ─── LOOP ─────────────────────────────────────────────────────────────────
+// VARIÁVEIS DE STAMINA
+let stamina = 100;
+const maxStamina = 100;
+
+//  LOOP 
 const clock=new THREE.Clock()
 function animate(){
   requestAnimationFrame(animate)
   const dt=clock.getDelta()
 
-  // movement
   moving=false
-  const speed=0.12
-  if(keys['KeyW']){ pz-=speed; moving=true; pAngle=Math.PI }
-  if(keys['KeyS']){ pz+=speed; moving=true; pAngle=0 }
-  
-  if(keys['KeyA']){ px-=speed; moving=true; pAngle=-Math.PI/2 }
-  if(keys['KeyD']){ px+=speed; moving=true; pAngle=Math.PI/2 }
-  
-  if(keys['KeyW']&&keys['KeyD']) pAngle=Math.PI*0.75
-  if(keys['KeyW']&&keys['KeyA']) pAngle=-Math.PI*0.75
+  let speed = 0.12;
+  const isRunning = (keys['ShiftLeft'] || keys['ShiftRight']) && stamina > 0;
+
+  const turnSpeed = 0.05;
+  if(keys['KeyA']){ player.group.rotation.y += turnSpeed; }
+  if(keys['KeyD']){ player.group.rotation.y -= turnSpeed; }
+
+  let moveDir = 0;
+  if(keys['KeyW']){ moving = true; moveDir = 1; }
+  if(keys['KeyS']){ moving = true; moveDir = -1; }
+
+  if (moving && isRunning) {
+      speed = 0.22;
+      stamina -= dt * 40; 
+  } else {
+      stamina += dt * 15; 
+  }
+  stamina = Math.max(0, Math.min(maxStamina, stamina));
+  document.getElementById('stamina-bar').style.width = stamina + '%';
+
+  if (moving) {
+      px += Math.sin(player.group.rotation.y) * speed * moveDir;
+      pz += Math.cos(player.group.rotation.y) * speed * moveDir;
+  }
 
   px=Math.max(-20,Math.min(20,px))
   pz=Math.max(-10,Math.min(20,pz)) 
   player.group.position.set(px,0,pz)
-
-  if(moving) {
-    let diff = pAngle - player.group.rotation.y;
-    while (diff < -Math.PI) diff += Math.PI * 2;
-    while (diff > Math.PI) diff -= Math.PI * 2;
-    player.group.rotation.y += diff * 0.15;
-  }
-  player.walkAnim(dt)
+  player.walkAnim(dt * (isRunning ? 1.5 : 1))
 
   // oven
   if(ovenBread) ovenBread.update(dt)
@@ -926,20 +1037,20 @@ function animate(){
   if(spawnTimer>=nextSpawnTime){ spawnTimer=0; nextSpawnTime=10+Math.random()*15; spawnCustomer() }
   for(let c of customers) c.update(dt)
 
-  //camara 3 pessoa
-  const offset = new THREE.Vector3(0, 8, 12)
-  offset.add(player.group.position)
-  camera.position.lerp(offset, 0.1)
-  camera.lookAt(player.group.position.x, player.group.position.y + 1, player.group.position.z)
-
-
-  updateUI()
+  // 3 pessoa camara
+  const offset = new THREE.Vector3(0, 5, -8); 
+  offset.applyAxisAngle(new THREE.Vector3(0, 1, 0), player.group.rotation.y);
+  offset.add(player.group.position);
   
+  offset.x = Math.max(-20, Math.min(20, offset.x));
+  offset.z = Math.max(-11, Math.min(20, offset.z));
+
+  camera.position.lerp(offset, 0.08);
+  camera.lookAt(player.group.position.x, player.group.position.y + 1.2, player.group.position.z);
+  updateUI()
   renderer.render(scene,camera)
 }
 animate()
-
-// initial spawn
 setTimeout(spawnCustomer, 2000)
 
 
