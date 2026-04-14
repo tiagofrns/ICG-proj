@@ -195,13 +195,32 @@ canvas{display:block}
 
 
 <script type="module">
+
+
 import * as THREE from 'three'
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js'
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js'
-
+import * as SkeletonUtils from 'three/addons/utils/SkeletonUtils.js'
 
 
 const gltfLoader = new GLTFLoader()
+
+
+let modelMan = null;
+let modelWoman = null;
+
+gltfLoader.load('models/Man.glb', (gltf) => {
+  modelMan = gltf.scene;
+  modelMan.traverse(c => { if(c.isMesh) { c.castShadow=true; c.receiveShadow=true; } });
+});
+
+gltfLoader.load('models/Woman.glb', (gltf) => {
+  modelWoman = gltf.scene;
+  modelWoman.traverse(c => { if(c.isMesh) { c.castShadow=true; c.receiveShadow=true; } });
+});
+// ==================================
+
+
 
 function loadProp(url, x, y, z, scale = 1, rotationY = 0) {
   gltfLoader.load(
@@ -229,40 +248,41 @@ function loadProp(url, x, y, z, scale = 1, rotationY = 0) {
   )
 }
 
+
 //  RENDERER 
 const renderer = new THREE.WebGLRenderer({ antialias: true })
 renderer.setSize(window.innerWidth, window.innerHeight)
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
 renderer.shadowMap.enabled = true
 renderer.shadowMap.type = THREE.PCFSoftShadowMap
-renderer.toneMapping = THREE.ACESFilmicToneMapping
-renderer.toneMappingExposure = 1.1
+renderer.toneMappingExposure = 0.6 
 renderer.outputColorSpace = THREE.SRGBColorSpace
 document.body.appendChild(renderer.domElement)
 
 //  CENA 
 const scene = new THREE.Scene()
-scene.background = new THREE.Color(0xf7f0e8)
-scene.fog = new THREE.FogExp2(0xf0e8dc, 0.018)
+scene.background = new THREE.Color(0x0a0c10)
+scene.fog = new THREE.FogExp2(0xf0e8dc, 0.02)
 
 //  CAMARA 
 const camera = new THREE.PerspectiveCamera(65, window.innerWidth / window.innerHeight, 0.1, 200)
 
 
 //  LUZES 
-scene.add(new THREE.AmbientLight(0xfff0e0, 1.2)) 
-scene.add(new THREE.HemisphereLight(0xffeedd, 0x886655, 0.8)) 
+scene.add(new THREE.AmbientLight(0xfff0e0, 0.3)) 
+scene.add(new THREE.HemisphereLight(0x333344, 0x11111a, 0.2)) 
 
-const fillLight = new THREE.DirectionalLight(0xfff5e0, 1.5)
-fillLight.position.set(0, 20, 20)
-fillLight.castShadow = true // Esta luz também faz algumas sombras muito suaves
+const fillLight = new THREE.DirectionalLight(0xfff5e0, 1.3)
+fillLight.castShadow = true 
 fillLight.shadow.mapSize.set(1024, 1024)
 fillLight.shadow.bias = -0.001
 scene.add(fillLight)
 
-const lightWork = new THREE.PointLight('#ffc880', 6, 30) // Mais alcance
+const lightWork = new THREE.PointLight('#ffc880', 3.5, 30) 
 lightWork.position.set(-10, 4, -2)
+lightWork.castShadow = true
 scene.add(lightWork)
+
 
 const lightCounter = new THREE.PointLight('#ffc880', 6, 30)
 lightCounter.position.set(10, 4, 4)
@@ -273,17 +293,9 @@ lightEntrance.position.set(0, 4, 15)
 scene.add(lightEntrance)
 
 
-const moon = new THREE.DirectionalLight(0x88aabb, 0.2)
-moon.position.set(20, 35, 25)
-moon.castShadow = true
-moon.shadow.mapSize.set(1024, 1024)
-moon.shadow.camera.near = 0.5
-moon.shadow.camera.far = 100
-moon.shadow.camera.left = -30
-moon.shadow.camera.right = 30
-moon.shadow.camera.top = 30
-moon.shadow.camera.bottom = -30
-moon.shadow.bias = -0.001
+const moon = new THREE.DirectionalLight(0x88aabb, 0.6)
+moon.position.set(-25, 20, 25)
+moon.castShadow = false 
 scene.add(moon)
 
 //  MATERIAIS 
@@ -325,12 +337,17 @@ for (let i = -22; i <= 22; i += 2) {
     i, 0.002, 4.5, -Math.PI / 2)
 }
 
-//  PAREDES 
+
+
+// PAREDES 
 add(new THREE.BoxGeometry(44.8, 16, 0.4), M.wall, 0, 8, -13)         
 add(new THREE.BoxGeometry(0.4, 16, 35), M.wall, -22, 8, 4.5)         
 add(new THREE.BoxGeometry(0.4, 16, 35), M.wall, 22, 8, 4.5)          
-add(new THREE.BoxGeometry(18, 16, 0.4), M.wall, -16, 8, 22)        
-add(new THREE.BoxGeometry(18, 16, 0.4), M.wall, 16, 8, 22)       
+
+// Parede da Frente (
+add(new THREE.BoxGeometry(20.25, 16, 0.4), M.wall, -11.875, 8, 22)  
+add(new THREE.BoxGeometry(20.25, 16, 0.4), M.wall, 11.875, 8, 22)   
+add(new THREE.BoxGeometry(3.5, 10, 0.4), M.wall, 0, 11, 22)         
 
 //rodapes
 add(new THREE.BoxGeometry(14, 1.5, 0.15), M.woodMed, -7, 0.8, -12.8) 
@@ -477,7 +494,7 @@ flourSack(-14, 3); flourSack(-13, 4.2); flourSack(-11, 3.4)
 // loadProp(url, x, y, z, scale, rotationY)
 loadProp('models/Oven.glb', 0, 0, -12, 1.25, 0)
 
-const ovenGlow = new THREE.PointLight('#ff5500', 4, 12)
+const ovenGlow = new THREE.PointLight('#ff5500', 4, 15)
 ovenGlow.position.set(0, 1.2, -11.5)
 ovenGlow.castShadow = false
 ovenGlow.shadow.mapSize.width = 1024
@@ -811,77 +828,127 @@ class OvenBread{
 //clientes:
 
 const NAMES=['Ana','João','Maria','Pedro','Sofia','Carlos','Ines','Rui']
-const ORDERS=['1 baguete','2 croissants','pão de centeio','pastel de nata','brioche','pão alentejano']
+const ORDERS=['1 baguete','2 croissants','pão de centeio','pastel de nata','pão brioche','pão alentejano']
 const PRICES={
   '1 baguete':1.80,
   '2 croissants':2.40,
   'pão de centeio':2.20,
   'pastel de nata':1.50,
-  'brioche':2.80,
+  'pão brioche':2.80,
   'pão alentejano':3.20
 }
 
-class Customer{
+class Customer {
   constructor(id){
-    this.id=id
-    this.name=NAMES[Math.floor(Math.random()*NAMES.length)]
-    this.order=ORDERS[Math.floor(Math.random()*ORDERS.length)]
-    this.price=PRICES[this.order]
-    this.patience=1.0
-    this.patienceTime=40+Math.random()*20
-    this.satisfied=false; this.angry=false
-    // 3D customer
-    this.group=new THREE.Group()
-    const bodyColor=['#cc6644','#4466cc','#44aa44','#cc44aa','#aa8844'][id%5]
-    const body=new THREE.Mesh(new THREE.CapsuleGeometry(0.3,0.9,6,8), new THREE.MeshStandardMaterial({color:bodyColor}))
-    body.position.y=1.0; body.castShadow=true; this.group.add(body)
-    const head=new THREE.Mesh(new THREE.SphereGeometry(0.25,10,8), new THREE.MeshStandardMaterial({color:'#e8c898'}))
-    head.position.y=1.75; this.group.add(head)
-    // speech bubble indicator
-    this.bubble=new THREE.Mesh(new THREE.SphereGeometry(0.12,8,8), new THREE.MeshStandardMaterial({color:'#ffdd44',emissive:'#ffaa00',emissiveIntensity:0.5}))
-    this.bubble.position.set(0.3,2.2,0); this.group.add(this.bubble)
-    this.group.position.set(-3+id*2.5,0,17+Math.random()*1.5)
-    scene.add(this.group)
-    this.createCard()
+    this.id = id;
+    this.isMale = Math.random() > 0.5; // 50% de probabilidade de ser homem ou mulher
+    
+    // Nomes separados por género
+    const maleNames = ['João','Pedro','Carlos','Rui','Miguel','Hugo'];
+    const femaleNames = ['Ana','Maria','Sofia','Inês','Rita','Catarina'];
+    this.name = this.isMale ? maleNames[Math.floor(Math.random()*maleNames.length)] : femaleNames[Math.floor(Math.random()*femaleNames.length)];
+    
+    this.order = ORDERS[Math.floor(Math.random()*ORDERS.length)];
+    this.price = PRICES[this.order];
+    this.patience = 1.0;
+    this.patienceTime = 40 + Math.random()*20;
+    this.satisfied = false; 
+    this.angry = false;
+    
+    this.group = new THREE.Group();
+
+    const sourceModel = this.isMale ? modelMan : modelWoman;
+    if(sourceModel) {
+      const char = SkeletonUtils.clone(sourceModel);
+      
+      if (this.isMale) {
+        char.scale.set(0.6, 0.6, 0.6); 
+      } else {
+        char.scale.set(0.25, 0.25, 0.25); 
+      }
+      
+      char.position.x -= 1; 
+      
+      this.group.add(char);
+    } else {
+      const bodyColor = this.isMale ? '#4466cc' : '#cc44aa';
+      const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.3, 0.9, 6, 8), new THREE.MeshStandardMaterial({color: bodyColor}));
+      body.position.y = 0; body.castShadow = true; this.group.add(body);
+      const head = new THREE.Mesh(new THREE.SphereGeometry(0.25, 10, 8), new THREE.MeshStandardMaterial({color:'#e8c898'}));
+      head.position.y = 1.75; this.group.add(head);
+    }
+
+    this.bubble = new THREE.Mesh(new THREE.SphereGeometry(0.12, 8, 8), new THREE.MeshStandardMaterial({color:'#ffdd44', emissive:'#ffaa00', emissiveIntensity:0.5}));
+    this.bubble.position.set(0.6, 4.5, 0);
+    this.group.add(this.bubble);
+
+    this.group.position.set(0, 0, 21);
+    this.group.rotation.y = Math.PI; 
+
+    scene.add(this.group);
+    this.createCard();
   }
+
   createCard(){
-    const panel=document.getElementById('customers-panel')
-    this.card=document.createElement('div')
-    this.card.className='customer-card'
-    this.card.innerHTML=`
-      <div class="cname">👤 ${this.name}</div>
+    const panel = document.getElementById('customers-panel');
+    this.card = document.createElement('div');
+    this.card.className = 'customer-card';
+    this.card.innerHTML = `
+      <div class="cname">${this.isMale ? '👨' : '👩'} ${this.name}</div>
       <div class="order">📋 ${this.order}</div>
       <div style="color:#c8a060;font-size:11px">💰 ${this.price.toFixed(2)} €</div>
       <div class="patience-bar"><div class="patience" style="width:100%"></div></div>
-    `
-    panel.appendChild(this.card)
-    this.patienceEl=this.card.querySelector('.patience')
+    `;
+    panel.appendChild(this.card);
+    this.patienceEl = this.card.querySelector('.patience');
   }
+
   update(dt){
-    if(this.satisfied||this.angry) return
-    this.patience-=dt/this.patienceTime
-    if(this.patience<0) this.patience=0
-    this.patienceEl.style.width=(this.patience*100)+'%'
-    if(this.patience<0.3) this.patienceEl.className='patience low'
-    if(this.patience<=0){ this.leave(false) }
-    // bob animation
-    this.group.position.y=Math.sin(Date.now()*0.002+this.id)*0.04
-    this.bubble.material.emissiveIntensity=0.5+Math.sin(Date.now()*0.003)*0.3
-    if(this.patience<0.3) this.card.classList.add('urgent')
+    if(this.satisfied || this.angry) {
+       this.group.position.x += (0 - this.group.position.x) * dt * 2;
+       this.group.position.z += (22 - this.group.position.z) * dt * 2;
+       return;
+    }
+
+    const queueIndex = customers.indexOf(this);
+    const targetX = 14;
+    const targetZ = 6 + (queueIndex * 2.2); 
+
+    this.group.position.x += (targetX - this.group.position.x) * dt * 3;
+    this.group.position.z += (targetZ - this.group.position.z) * dt * 3;
+
+    this.patience -= dt / this.patienceTime;
+    if(this.patience < 0) this.patience = 0;
+    this.patienceEl.style.width = (this.patience * 100) + '%';
+    if(this.patience < 0.3) this.patienceEl.className = 'patience low';
+    if(this.patience <= 0){ this.leave(false); }
+
+    this.bubble.material.emissiveIntensity = 0.5 + Math.sin(Date.now()*0.003) * 0.3;
+    if(this.patience < 0.3) this.card.classList.add('urgent');
   }
+
   leave(paid){
-    this.satisfied=paid; this.angry=!paid
-    if(paid) notify(`✅ ${this.name} ficou feliz! +${this.price.toFixed(2)}€`)
-    else notify(`😠 ${this.name} foi embora...`)
-    setTimeout(()=>{ scene.remove(this.group); this.card.remove(); removeCustomer(this.id) },800)
+    this.satisfied = paid; 
+    this.angry = !paid;
+    if(paid) notify(`✅ ${this.name} ficou feliz! +${this.price.toFixed(2)}€`);
+    else notify(`😠 ${this.name} foi embora...`);
+    
+    setTimeout(() => { 
+      scene.remove(this.group); 
+      this.card.remove(); 
+      removeCustomer(this.id); 
+    }, 1500);
   }
 }
 
 let customers=[], nextCustomerId=0, nextSpawnTime=8, spawnTimer=0
-function removeCustomer(id){ customers=customers.filter(c=>c.id!==id) }
+const MAX_CUSTOMERS = 5;
+function removeCustomer(id){ customers = customers.filter(c => c.id !== id); }
+
 function spawnCustomer(){
-  if(customers.length>=4) return
-  customers.push(new Customer(nextCustomerId++))
+  if(customers.length >= MAX_CUSTOMERS) return;
+  
+  customers.push(new Customer(nextCustomerId++));
 }
 
 
@@ -955,7 +1022,10 @@ window.addEventListener('keydown',e=>{
     }
     if(!sold) notify('❗ Chega-te a um cliente!')
   }
-})
+
+ }
+
+)
 window.addEventListener('keyup',e=>keys[e.code]=false)
 
 function dist(x1,z1,x2,z2){ return Math.hypot(x1-x2,z1-z2) }
@@ -1019,13 +1089,33 @@ function animate(){
   stamina = Math.max(0, Math.min(maxStamina, stamina));
   document.getElementById('stamina-bar').style.width = stamina + '%';
 
+  // --- LÓGICA DE MOVIMENTO COM COLISÃO ---
+  let nextPx = px;
+  let nextPz = pz;
+
   if (moving) {
-      px += Math.sin(player.group.rotation.y) * speed * moveDir;
-      pz += Math.cos(player.group.rotation.y) * speed * moveDir;
+      nextPx += Math.sin(player.group.rotation.y) * speed * moveDir;
+      nextPz += Math.cos(player.group.rotation.y) * speed * moveDir;
   }
 
+  nextPx = Math.max(-20, Math.min(20, nextPx));
+  nextPz = Math.max(-10, nextPz); 
+
+ 
+  const naLarguraDaPorta = (nextPx > -1.75 && nextPx < 1.75);
+  const tentandoPassarParedeFrente = (nextPz > 21.5);
+
+  if (tentandoPassarParedeFrente && !naLarguraDaPorta) {
+      nextPz = Math.min(pz, 21.5); 
+  }
+
+  nextPz = Math.min(60, nextPz);
+
+  px = nextPx;
+  pz = nextPz;
+
   px=Math.max(-20,Math.min(20,px))
-  pz=Math.max(-10,Math.min(20,pz)) 
+  pz = Math.max(-10, Math.min(60, pz));
   player.group.position.set(px,0,pz)
   player.walkAnim(dt * (isRunning ? 1.5 : 1))
 
@@ -1042,8 +1132,8 @@ function animate(){
   offset.applyAxisAngle(new THREE.Vector3(0, 1, 0), player.group.rotation.y);
   offset.add(player.group.position);
   
-  offset.x = Math.max(-20, Math.min(20, offset.x));
-  offset.z = Math.max(-11, Math.min(20, offset.z));
+  offset.x = Math.max(-25, Math.min(25, offset.x));
+  offset.z = Math.max(-15, Math.min(70, offset.z));
 
   camera.position.lerp(offset, 0.08);
   camera.lookAt(player.group.position.x, player.group.position.y + 1.2, player.group.position.z);
