@@ -15,7 +15,9 @@ Jogo de gestão de padaria em 3D feito com Three.js, inspirado no Overcooked.
 - [ ] Ecrã de fim de jogo
 - [ ] Sons e música
 - [ ] Loja com produtos para comprar
+- [ ] Leaderboard
 - [x] Colocar num servidor online (github?)
+
 ## Como correr
 
 Abre o `index.html` no browser.
