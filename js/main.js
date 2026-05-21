@@ -129,6 +129,7 @@ window.addEventListener('keydown', e => {
   if (e.code === 'KeyT' && (player.hasDough || player.hasKneadedDough || player.hasBread)) {
     player.hasDough = false; player.hasKneadedDough = false; player.hasBread = false;
     player.updateItem();
+    addMoney(800); //teste
     notify('🗑️ Deitaste o produto no lixo!');
     return;
   }
@@ -204,6 +205,8 @@ window.addEventListener('keydown', e => {
 window.addEventListener('keyup', e => { keys[e.code] = false })
 
 function dist(x1, z1, x2, z2) { return Math.hypot(x1 - x2, z1 - z2) }
+
+
 // SPAWN DE CLIENTES 
 let spawnTimer = 0, nextSpawnTime = 8
 
@@ -219,8 +222,7 @@ function animate() {
     return
   }
 
-  
-  // === MOVIMENTO ESTILO ROBLOX ===
+  //mov
   // W/S/A/D movem relativamente à câmara; boneco vira suavemente para a direção do movimento
   moving = false
   let speed = 0.12 * speedMult;
@@ -241,7 +243,6 @@ function animate() {
     moving = true
     moveVec.normalize()
 
-    // Boneco vira suavemente para a direção do movimento (lerp)
     const targetAngle = Math.atan2(moveVec.x, moveVec.z)
     let diff = targetAngle - player.group.rotation.y
     while (diff >  Math.PI) diff -= Math.PI * 2
@@ -250,8 +251,12 @@ function animate() {
   }
 
   // stamina
-  if (moving && isRunning) { speed = 0.22; stamina -= dt * 40 }
-  else                     { stamina += dt * 15 }
+  if (moving && isRunning) { 
+    speed = 0.22 * speedMult; 
+    stamina -= dt * 40;
+  } else { 
+    stamina += dt * 15;
+  }
   stamina = Math.max(0, Math.min(maxStamina, stamina))
   document.getElementById('stamina-bar').style.width = stamina + '%'
 
@@ -271,7 +276,7 @@ function animate() {
 
   px = nextPx; pz = nextPz
   player.group.position.set(px, 0, pz)
-  player.walkAnim(dt * (isRunning ? 1.5 : 1), moving)
+  player.walkAnim(dt * (isRunning ? 1.5 : 1) * speedMult, moving)  
   // forno
   if (ovenBread) ovenBread.update(dt, ovenTotal)
 
@@ -311,7 +316,7 @@ function animate() {
     }
   }
 
-  camera.position.lerp(idealCamPos, 0.12)
+  camera.position.lerp(idealCamPos, Math.min(1, dt * 12))
   camera.lookAt(camTarget)
 
   // hud
