@@ -20,4 +20,5 @@ Jogo de gestão de padaria em 3D feito com Three.js, inspirado no Overcooked.
 
 ## Como correr
 
-Abre o `index.html` no browser.
+Abre o `index.html` no browser ou [Link github](https://tiagofrns.github.io/ICG-proj/)
+
