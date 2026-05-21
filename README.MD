@@ -10,13 +10,13 @@ Jogo de gestão de padaria em 3D feito com Three.js, inspirado no Overcooked.
 - [x] Mecânica do pão — pegar, amassar, enfornar, tirar
 - [x] Clientes com pedidos e barra de paciência
 - [x] Sistema de dinheiro e HUD
-- [ ] Receitas diferentes por produto
-- [ ] Progressão de dificuldade
-- [ ] Ecrã de fim de jogo
-- [ ] Sons e música
-- [ ] Loja com produtos para comprar
-- [ ] Leaderboard
-- [x] Colocar num servidor online (github?)
+- [x] Receitas diferentes por produto
+- [x] Progressão de dificuldade
+- [x] Ecrã de fim de jogo
+- [x] Sons e música
+- [x] Loja com produtos para comprar
+- [x] Leaderboard
+- [x] Colocar num servidor online
 
 ## Como correr
 

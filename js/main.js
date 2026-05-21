@@ -3,85 +3,209 @@ import { renderer, scene, camera } from './scene.js'
 import './world.js'
 import { Baker } from './baker.js'
 import { customers, trySpawnCustomer } from './customers.js'
-import { notify, addMoney, updateRecipe, updateHUD, OvenBread } from './ui.js'
-
+import { notify, money, addMoney, updateRecipe, updateHUD, OvenBread, servedCount } from './ui.js'
+import { initAudio, sfx } from './audio.js'
 // ESTADO DO JOGO 
 const player   = new Baker()
 let px = 0, pz = 15
 let ovenBread  = null
-const ovenTotal = 12
-
+let ovenTotal = 12
 let stamina    = 100
 const maxStamina = 100
-
 let moving = false
+let gameStarted = false
 
-// INPUT 
+let shopOpen = false;
+let speedMult = 1.0;
+let ovenMult = 1.0;
+
+const RECIPES = {
+  '1': { name: '1 baguete', kneads: 2, bakeTime: 8 },
+  '2': { name: '2 croissants', kneads: 3, bakeTime: 6 },
+  '3': { name: 'pão de centeio', kneads: 4, bakeTime: 12 },
+  '4': { name: 'pastel de nata', kneads: 1, bakeTime: 5 },
+  '5': { name: 'pão brioche', kneads: 3, bakeTime: 10 },
+  '6': { name: 'pão alentejano', kneads: 5, bakeTime: 15 }
+}
+let currentRecipe = RECIPES['1']
+let carryingRecipe = null             
+
+//iniio
+const startBtn = document.getElementById('start-btn');
+// LOGICA DA LOJA -
+document.getElementById('btn-upg-speed')?.addEventListener('click', (e) => {
+  if (money >= 50 && speedMult === 1.0) {
+    addMoney(-50);
+    speedMult = 1.5;
+    e.currentTarget.classList.add('bought');
+    document.getElementById('shop-money').textContent = money.toFixed(2).replace('.', ',') + ' €';
+    notify("👟 Sapatos Rápidos comprados!");
+  }
+});
+
+document.getElementById('btn-upg-oven')?.addEventListener('click', (e) => {
+  if (money >= 80 && ovenMult === 1.0) {
+    addMoney(-80);
+    ovenMult = 0.6; // Forno 40% mais rápido
+    e.currentTarget.classList.add('bought');
+    document.getElementById('shop-money').textContent = money.toFixed(2).replace('.', ',') + ' €';
+    notify("🔥 Forno Turbo comprado!");
+  }
+});
+
+if (startBtn) {
+  startBtn.addEventListener('click', async () => {
+    // Dá feedback visual e previne múltiplos cliques enquanto carrega os buffers
+    startBtn.textContent = "A carregar sons...";
+    startBtn.disabled = true;
+
+    try {
+      await initAudio();
+      console.log("Todos os áudios locais foram descodificados com sucesso!");
+      
+      const screen = document.getElementById('start-screen');
+      if (screen) {
+        screen.style.opacity = '0';
+        setTimeout(() => screen.style.display = 'none', 300);
+      }
+      
+      gameStarted = true;
+      setTimeout(trySpawnCustomer, 2000);
+    } catch (err) {
+      console.error("Falha ao inicializar o motor de áudio:", err);
+      gameStarted = true;
+      const screen = document.getElementById('start-screen');
+      if (screen) screen.style.display = 'none';
+    }
+  });
+} else {
+  console.error("Erro: O botão 'start-btn' não foi encontrado no HTML.");
+}
+
+
+
 const keys = {}
 
+// === CÂMARA ESTILO ROBLOX ===
+let camYaw   = 0    // rotação horizontal (rato esq/dir)
+let camPitch = 0.45  // rotação vertical   (rato cima/baixo)
+let isDragging = false
+let lastMouseX = 0, lastMouseY = 0
+
+window.addEventListener('mousedown', e => {
+  if (e.button === 2 || e.button === 0) {
+    isDragging = true
+    lastMouseX = e.clientX
+    lastMouseY = e.clientY
+  }
+})
+window.addEventListener('mouseup', () => { isDragging = false })
+window.addEventListener('mousemove', e => {
+  if (!isDragging) return
+  const dx = e.clientX - lastMouseX
+  const dy = e.clientY - lastMouseY
+  lastMouseX = e.clientX
+  lastMouseY = e.clientY
+  camYaw   -= dx * 0.005
+  camPitch -= dy * 0.005
+  camPitch  = Math.max(0.1, Math.min(1.4, camPitch))
+})
+window.addEventListener('contextmenu', e => e.preventDefault())
+
 window.addEventListener('keydown', e => {
+  if (!gameStarted) return
   keys[e.code] = true
 
-  // E - pegar massa (perto da mesa)
+  // Abrir / Fechar Loja
+  if (e.code === 'KeyB') {
+    shopOpen = !shopOpen;
+    const s = document.getElementById('shop-screen');
+    s.style.display = shopOpen ? 'flex' : 'none';
+    if(shopOpen) document.getElementById('shop-money').textContent = money.toFixed(2).replace('.', ',') + ' €';
+    return;
+  }
+
+  // Deitar produto fora
+  if (e.code === 'KeyT' && (player.hasDough || player.hasKneadedDough || player.hasBread)) {
+    player.hasDough = false; player.hasKneadedDough = false; player.hasBread = false;
+    player.updateItem();
+    notify('🗑️ Deitaste o produto no lixo!');
+    return;
+  }
+
+  if (RECIPES[e.key] && !player.hasDough && !player.hasKneadedDough && !player.hasBread) {
+    currentRecipe = RECIPES[e.key];
+    notify('📜 Receita ativa: ' + currentRecipe.name.toUpperCase());
+  }
+
   if (e.code === 'KeyE' && !player.hasDough && !player.hasKneadedDough && !player.hasBread) {
     if (dist(px, pz, -12, 6) < 3.5) {
       player.hasDough = true; player.kneadCount = 0; player.updateItem()
-      notify('Massa apanhada! 🥣 Amassa com Q')
+      carryingRecipe = currentRecipe; 
+      sfx.pickup();
+      notify(`Massa de ${carryingRecipe.name} apanhada! Amassa com Q`)
     }
   }
 
-  // Q - amassar (perto da mesa)
   if (e.code === 'KeyQ' && player.hasDough) {
     if (dist(px, pz, -12, 6) < 3.5) {
       player.kneadCount++
-      if (player.kneadCount >= 3) {
+      sfx.knead();
+      if (player.kneadCount >= carryingRecipe.kneads) {
         player.hasDough = false; player.hasKneadedDough = true; player.updateItem()
-        notify('Massa amassada! Agora leva ao forno (F)')
+        notify('Massa pronta! Leva ao forno (F)')
       } else {
-        notify(`💪 A amassar... (${player.kneadCount}/3)`)
+        notify(`💪 A amassar... (${player.kneadCount}/${carryingRecipe.kneads})`)
       }
     }
   }
 
-  // F - colocar no forno
   if (e.code === 'KeyF' && player.hasKneadedDough && !ovenBread) {
     if (dist(px, pz, 0, -12) < 5) {
       player.hasKneadedDough = false; player.updateItem()
-      ovenBread = new OvenBread()
-      notify('No forno 🔥! Aguarda 12 segundos...')
+      // Aplica multiplicador da loja ao tempo de cozedura
+      ovenTotal = carryingRecipe.bakeTime * ovenMult; 
+      ovenBread = new OvenBread(carryingRecipe.name);
+      sfx.ovenIn();
+      notify(`No forno 🔥! Aguarda ${ovenTotal.toFixed(1)} segundos...`)
     }
   }
 
-  // SPACE - tirar do forno
   if (e.code === 'Space') {
     if (ovenBread && ovenBread.done && dist(px, pz, 0, -12) < 5) {
+      carryingRecipe = Object.values(RECIPES).find(r => r.name === ovenBread.recipeName);
       ovenBread.remove(); ovenBread = null
       player.hasBread = true; player.updateItem()
-      notify('🍞 Pão pronto! Vende a um cliente (R)')
+      sfx.pickup();
+      notify(`🍞 ${carryingRecipe.name} pronto! Vende (R)`)
     }
   }
 
-  // R - vender ao cliente
   if (e.code === 'KeyR' && player.hasBread) {
     let sold = false
     for (let c of customers) {
       if (!c.satisfied && !c.angry && dist(px, pz, c.group.position.x, c.group.position.z) < 4) {
-        player.hasBread = false; player.updateItem()
-        addMoney(c.price); c.leave(true)
-        sold = true; break
+        // Validação da Receita!
+        if (c.order === carryingRecipe.name) {
+          player.hasBread = false; player.updateItem()
+          addMoney(c.price); c.leave(true)
+          sold = true; break
+        } else {
+          notify(`❌ O cliente quer ${c.order}, mas tens ${carryingRecipe.name}!`);
+          sold = true; // Impede o loop de saltar para o próximo cliente automaticamente
+          break;
+        }
       }
     }
-    if (!sold) notify('❗ Chega-te a um cliente!')
+    if (!sold) notify('❗ Chega-te ao cliente certo!')
   }
 })
 
 window.addEventListener('keyup', e => { keys[e.code] = false })
 
 function dist(x1, z1, x2, z2) { return Math.hypot(x1 - x2, z1 - z2) }
-
 // SPAWN DE CLIENTES 
 let spawnTimer = 0, nextSpawnTime = 8
-setTimeout(trySpawnCustomer, 2000) // primeiro cliente logo ao início
 
 // LOOP PRINCIPAL 
 const clock = new THREE.Clock()
@@ -90,18 +214,40 @@ function animate() {
   requestAnimationFrame(animate)
   const dt = clock.getDelta()
 
-  // movimento
+  if (!gameStarted || shopOpen) {
+    renderer.render(scene, camera)
+    return
+  }
+
+  
+  // === MOVIMENTO ESTILO ROBLOX ===
+  // W/S/A/D movem relativamente à câmara; boneco vira suavemente para a direção do movimento
   moving = false
-  let speed = 0.12
-  const isRunning = (keys['ShiftLeft'] || keys['ShiftRight']) && stamina > 0
+  let speed = 0.12 * speedMult;
+  const isRunning = (keys['ShiftLeft'] || keys['ShiftRight']) && stamina > 0;
+  if (moving && isRunning) { speed = 0.22 * speedMult; stamina -= dt * 40 }
 
-  const turnSpeed = 0.05
-  if (keys['KeyA']) player.group.rotation.y += turnSpeed
-  if (keys['KeyD']) player.group.rotation.y -= turnSpeed
+  // Vetores da câmara no plano XZ (ignora inclinação vertical)
+  const camForward = new THREE.Vector3(-Math.sin(camYaw), 0, -Math.cos(camYaw))
+  const camRight   = new THREE.Vector3( Math.cos(camYaw), 0, -Math.sin(camYaw))
 
-  let moveDir = 0
-  if (keys['KeyW']) { moving = true; moveDir =  1 }
-  if (keys['KeyS']) { moving = true; moveDir = -1 }
+  let moveVec = new THREE.Vector3()
+  if (keys['KeyW']) moveVec.add(camForward)
+  if (keys['KeyS']) moveVec.sub(camForward)
+  if (keys['KeyA']) moveVec.sub(camRight)
+  if (keys['KeyD']) moveVec.add(camRight)
+
+  if (moveVec.lengthSq() > 0) {
+    moving = true
+    moveVec.normalize()
+
+    // Boneco vira suavemente para a direção do movimento (lerp)
+    const targetAngle = Math.atan2(moveVec.x, moveVec.z)
+    let diff = targetAngle - player.group.rotation.y
+    while (diff >  Math.PI) diff -= Math.PI * 2
+    while (diff < -Math.PI) diff += Math.PI * 2
+    player.group.rotation.y += diff * Math.min(1, dt * 14)
+  }
 
   // stamina
   if (moving && isRunning) { speed = 0.22; stamina -= dt * 40 }
@@ -112,8 +258,8 @@ function animate() {
   // posição com colisão básica
   let nextPx = px, nextPz = pz
   if (moving) {
-    nextPx += Math.sin(player.group.rotation.y) * speed * moveDir
-    nextPz += Math.cos(player.group.rotation.y) * speed * moveDir
+    nextPx += moveVec.x * speed
+    nextPz += moveVec.z * speed
   }
   nextPx = Math.max(-20, Math.min(20, nextPx))
   nextPz = Math.max(-10, nextPz)
@@ -133,23 +279,44 @@ function animate() {
   spawnTimer += dt
   if (spawnTimer >= nextSpawnTime) {
     spawnTimer = 0
-    nextSpawnTime = 10 + Math.random() * 15
+    const diffOffset = Math.min(10, servedCount * 0.5);
+    nextSpawnTime = Math.max(5, (10 + Math.random() * 15) - diffOffset);
     trySpawnCustomer()
   }
   for (let c of customers) c.update(dt)
 
-  // câmara em 3ª pessoa
-  const offset = new THREE.Vector3(0, 5, -8)
-  offset.applyAxisAngle(new THREE.Vector3(0, 1, 0), player.group.rotation.y)
-  offset.add(player.group.position)
-  offset.x = Math.max(-25, Math.min(25, offset.x))
-  offset.z = Math.max(-15, Math.min(70, offset.z))
-  camera.position.lerp(offset, 0.08)
-  camera.lookAt(player.group.position.x, player.group.position.y + 1.2, player.group.position.z)
+  // === CÂMARA ORBITAL ESTILO ROBLOX ===
+  const camDist = 7
+  const camTarget = new THREE.Vector3(px, 1.2, pz)
+  const idealCamPos = new THREE.Vector3(
+    px + Math.sin(camYaw) * Math.cos(camPitch) * camDist,
+    1.2 + Math.sin(camPitch) * camDist,
+    pz + Math.cos(camYaw) * Math.cos(camPitch) * camDist
+  )
+  idealCamPos.x = Math.max(-25, Math.min(25, idealCamPos.x))
+  idealCamPos.z = Math.max(-15, Math.min(70, idealCamPos.z))
+  const cPad = 1.0 
+
+  if (pz <= 21.5) {
+   
+    idealCamPos.x = Math.max(-22 + cPad, Math.min(22 - cPad, idealCamPos.x))
+    idealCamPos.z = Math.max(-13 + cPad, Math.min(22 - cPad, idealCamPos.z))
+  } else {
+    idealCamPos.x = Math.max(-22 + cPad, Math.min(22 - cPad, idealCamPos.x))
+    
+    if (idealCamPos.x < -1.75 || idealCamPos.x > 1.75) {
+      idealCamPos.z = Math.max(22 + cPad, Math.min(60, idealCamPos.z))
+    } else {
+      idealCamPos.z = Math.max(-13 + cPad, Math.min(60, idealCamPos.z))
+    }
+  }
+
+  camera.position.lerp(idealCamPos, 0.12)
+  camera.lookAt(camTarget)
 
   // hud
   updateHUD(player, ovenBread, ovenTotal)
-  updateRecipe(player, ovenBread)
+  updateRecipe(player, ovenBread, currentRecipe, carryingRecipe)
 
   renderer.render(scene, camera)
 }

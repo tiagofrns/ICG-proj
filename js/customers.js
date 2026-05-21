@@ -2,7 +2,8 @@ import * as THREE from 'three'
 import * as SkeletonUtils from 'three/addons/utils/SkeletonUtils.js'
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js'
 import { scene } from './scene.js'
-import { notify } from './ui.js'
+import { notify, updateStats, servedCount} from './ui.js'
+import { sfx } from './audio.js'
 
 const gltfLoader = new GLTFLoader()
 
@@ -48,7 +49,8 @@ export class Customer {
     this.order       = ORDERS[Math.floor(Math.random() * ORDERS.length)]
     this.price       = PRICES[this.order]
     this.patience    = 1.0
-    this.patienceTime = 40 + Math.random() * 20
+    const diffPenalty = Math.min(25, servedCount * 1.5)
+    this.patienceTime = Math.max(15, (40 + Math.random() * 20) - diffPenalty) // progressao de dificuldade
     this.satisfied   = false
     this.angry       = false
 
@@ -128,8 +130,16 @@ export class Customer {
   leave(paid) {
     this.satisfied = paid
     this.angry     = !paid
-    if (paid) notify(`✅ ${this.name} ficou feliz! +${this.price.toFixed(2)}€`)
-    else      notify(`😠 ${this.name} foi embora...`)
+    updateStats(paid) 
+    
+    if (paid) {
+      sfx.coin() 
+      notify(`✅ ${this.name} ficou feliz! +${this.price.toFixed(2)}€`)
+    } else {
+      sfx.angry() 
+      notify(`😠 ${this.name} foi embora...`)
+    }
+    
     setTimeout(() => {
       scene.remove(this.group)
       this.card.remove()

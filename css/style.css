@@ -9,6 +9,34 @@ canvas { display: block; }
   padding: 15px; pointer-events: none;
 }
 
+#start-screen {
+  position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(10, 6, 2, 0.95);
+  display: flex; flex-direction: column; justify-content: center; align-items: center;
+  z-index: 999;
+  color: #f5d060; text-align: center;
+  transition: opacity 0.3s ease;
+}
+#start-screen h1 { 
+  font-family: 'Playfair Display', serif; font-size: 54px; margin-bottom: 15px; 
+  text-shadow: 0 0 25px rgba(200, 150, 12, 0.6); 
+}
+#start-screen p { 
+  font-size: 18px; color: #d4b896; margin-bottom: 25px; max-width: 500px; line-height: 1.5; 
+}
+.controls-hint { 
+  background: rgba(255,255,255,0.05); padding: 15px 25px; border-radius: 8px; 
+  margin-bottom: 40px; color: #e8d4b0; font-size: 14px; border: 1px solid rgba(200,150,12,0.2); 
+}
+.controls-hint b { color: #f5d060; }
+#start-btn {
+  background: linear-gradient(135deg, #c8960c, #f5d060);
+  border: none; border-radius: 8px; padding: 16px 36px;
+  font-family: 'Lato', sans-serif; font-weight: bold; font-size: 18px; color: #111;
+  cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 15px rgba(200,150,12,0.3);
+}
+#start-btn:hover { transform: scale(1.05); box-shadow: 0 6px 25px rgba(200,150,12,0.5); }
+
 #money-box {
   background: linear-gradient(135deg, rgba(20,12,5,0.95), rgba(40,20,8,0.9));
   border: 1px solid #c8960c;
@@ -114,3 +142,15 @@ canvas { display: block; }
 .recipe-step::before       { content: '○'; font-size: 10px; }
 .recipe-step.done::before  { content: '✓'; }
 .recipe-step.active::before { content: '●'; color: #f5d060; }
+
+
+/* botoes da loja*/
+
+.shop-btn {
+  background: linear-gradient(135deg, #c8960c, #f5d060);
+  border: none; border-radius: 10px; padding: 15px 25px;
+  font-family: 'Lato', sans-serif; font-weight: bold; font-size: 16px; color: #111;
+  cursor: pointer; transition: transform 0.2s;
+}
+.shop-btn:hover { transform: scale(1.05); }
+.shop-btn.bought { background: #444; color: #888; cursor: not-allowed; transform: none; box-shadow: none; }

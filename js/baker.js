@@ -206,11 +206,12 @@ export class Baker {
       this.armRGroup.rotation.x = -Math.sin(t * 6) * 0.28
       this.group.position.y = Math.abs(Math.sin(t * 6)) * 0.04
     } else {
-      this.legL.rotation.x      += (0 - this.legL.rotation.x) * 0.12
-      this.legR.rotation.x      += (0 - this.legR.rotation.x) * 0.12
-      this.armLGroup.rotation.x += (0 - this.armLGroup.rotation.x) * 0.12
-      this.armRGroup.rotation.x += (0 - this.armRGroup.rotation.x) * 0.12
-      this.group.position.y     += (0 - this.group.position.y) * 0.1
+      const lerpFactor = Math.min(1, dt * 12);
+      this.legL.rotation.x      += (0 - this.legL.rotation.x) * lerpFactor
+      this.legR.rotation.x      += (0 - this.legR.rotation.x) * lerpFactor
+      this.armLGroup.rotation.x += (0 - this.armLGroup.rotation.x) * lerpFactor
+      this.armRGroup.rotation.x += (0 - this.armRGroup.rotation.x) * lerpFactor
+      this.group.position.y     += (0 - this.group.position.y) * lerpFactor
       this.headGroup.rotation.z  = Math.sin(t * 0.8) * 0.02
     }
     this.armLGroup.rotation.z =  0.25 + Math.sin(t * 0.5) * 0.03

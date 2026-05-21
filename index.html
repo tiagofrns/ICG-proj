@@ -9,10 +9,26 @@
 <body>
 
 <!-- HUD principal -->
+<div id="start-screen">
+  <h1>Padaria Artesanal</h1>
+  <p>Prepara a massa, amassa, leva ao forno e atende os clientes antes que percam a paciência!</p>
+  <div class="controls-hint">
+    <b>WASD</b> · Mover &nbsp;|&nbsp; <b>E</b> · Pegar Massa &nbsp;|&nbsp; <b>Q</b> · Amassar &nbsp;|&nbsp; <b>F</b> · Forno &nbsp;|&nbsp; <b>ESPAÇO</b> · Tirar do Forno &nbsp;|&nbsp; <b>R</b> · Vender
+  </div>
+  <div id="leaderboard" style="color: #22cc44; margin-bottom: 20px; font-weight: bold; font-size: 20px;">
+    🏆 Recorde: <span id="high-score">0,00 €</span>
+  </div>
+  <button id="start-btn">Começar a Trabalhar</button>
+</div>
+
 <div id="hud">
   <div id="money-box">
     <div id="money-label">Caixa Registadora</div>
     <span id="money">0,00 €</span>
+    <div id="stats-box" style="margin-top:8px; font-size:12px; color:#d4b896; text-align:center; font-family:'Lato', sans-serif;">
+        😊 <span id="stat-served" style="color:#22cc44; font-weight:bold;">0</span> &nbsp;|&nbsp; 
+        😠 <span id="stat-lost" style="color:#cc2200; font-weight:bold;">0</span>
+    </div>
   </div>
 
   <div id="state-box">
@@ -25,12 +41,15 @@
 
   <div id="controls-box">
     <b>Padaria Artesanal</b><br>
+    <b>1 a 6</b> · escolher receita<br>
     <b>WASD</b> · mover<br>
-    <b>E</b> · pegar massa (mesa)<br>
-    <b>Q</b> · amassar (mesa)<br>
+    <b>E</b> · pegar massa<br>
+    <b>Q</b> · amassar<br>
     <b>F</b> · colocar no forno<br>
     <b>SPACE</b> · tirar do forno<br>
-    <b>R</b> · vender ao cliente
+    <b>R</b> · vender ao cliente<br>
+    <b>T</b> · lixo (descartar item)<br>
+    <b>B</b> · abrir loja
   </div>
 </div>
 
@@ -50,6 +69,8 @@
 <!-- Passos da receita -->
 <div id="recipe-hud">
   <b>Receita</b>
+  <div id="active-recipe-name" style="color: #f5d060; font-weight: bold; font-size: 13px; margin-bottom: 8px; text-transform: uppercase;">1 Baguete</div>
+  
   <div class="recipe-step" id="step-dough">Pegar massa</div>
   <div class="recipe-step" id="step-knead">Amassar (Q)</div>
   <div class="recipe-step" id="step-oven">Levar ao forno</div>
@@ -57,12 +78,21 @@
   <div class="recipe-step" id="step-take">Tirar do forno</div>
   <div class="recipe-step" id="step-sell">Vender (R)</div>
 </div>
+<div id="shop-screen" style="display: none; position: absolute; top:0; left:0; right:0; bottom:0; background: rgba(10,6,2,0.95); z-index: 100; flex-direction: column; align-items: center; justify-content: center; color: #f5d060;">
+  <h1 style="font-family:'Playfair Display'; font-size: 44px; margin-bottom: 10px;">Melhorias</h1>
+  <p style="font-size: 20px; color: #d4b896; margin-bottom: 30px;">Saldo: <span id="shop-money">0,00 €</span></p>
+  <div style="display: flex; gap: 20px;">
+    <button id="btn-upg-speed" class="shop-btn">👟 Sapatos Rápidos (50€)<br><span style="font-size:12px;font-weight:normal">Andar + Rápido</span></button>
+    <button id="btn-upg-oven" class="shop-btn">🔥 Forno Turbo (80€)<br><span style="font-size:12px;font-weight:normal">Cozedura 40% mais rápida</span></button>
+  </div>
+  <p style="margin-top: 30px; color: #888;">Pressiona <b>B</b> para fechar</p>
+</div>
 
 <script type="importmap">
 {
   "imports": {
-    "three":          "https://unpkg.com/three@0.160.0/build/three.module.js",
-    "three/addons/":  "https://unpkg.com/three@0.160.0/examples/jsm/"
+    "three": "https://unpkg.com/three@0.184.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.184.0/examples/jsm/"
   }
 }
 </script>
