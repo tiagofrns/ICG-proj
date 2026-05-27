@@ -35,7 +35,7 @@ const startBtn = document.getElementById('start-btn');
 // LOGICA DA LOJA -
 document.getElementById('btn-upg-speed')?.addEventListener('click', (e) => {
   if (money >= 50 && speedMult === 1.0) {
-    addMoney(-50);
+    addMoney(-25);
     speedMult = 1.5;
     e.currentTarget.classList.add('bought');
     document.getElementById('shop-money').textContent = money.toFixed(2).replace('.', ',') + ' €';
@@ -45,7 +45,7 @@ document.getElementById('btn-upg-speed')?.addEventListener('click', (e) => {
 
 document.getElementById('btn-upg-oven')?.addEventListener('click', (e) => {
   if (money >= 80 && ovenMult === 1.0) {
-    addMoney(-80);
+    addMoney(-30);
     ovenMult = 0.6; // Forno 40% mais rápido
     e.currentTarget.classList.add('bought');
     document.getElementById('shop-money').textContent = money.toFixed(2).replace('.', ',') + ' €';
@@ -129,7 +129,7 @@ window.addEventListener('keydown', e => {
   if (e.code === 'KeyT' && (player.hasDough || player.hasKneadedDough || player.hasBread)) {
     player.hasDough = false; player.hasKneadedDough = false; player.hasBread = false;
     player.updateItem();
-    addMoney(800); //teste
+    //addMoney(800); //teste
     notify('🗑️ Deitaste o produto no lixo!');
     return;
   }
