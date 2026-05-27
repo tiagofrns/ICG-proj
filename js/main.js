@@ -223,13 +223,11 @@ function animate() {
   }
 
   //mov
-  // W/S/A/D movem relativamente à câmara; boneco vira suavemente para a direção do movimento
   moving = false
   let speed = 0.12 * speedMult;
   const isRunning = (keys['ShiftLeft'] || keys['ShiftRight']) && stamina > 0;
   if (moving && isRunning) { speed = 0.22 * speedMult; stamina -= dt * 40 }
 
-  // Vetores da câmara no plano XZ (ignora inclinação vertical)
   const camForward = new THREE.Vector3(-Math.sin(camYaw), 0, -Math.cos(camYaw))
   const camRight   = new THREE.Vector3( Math.cos(camYaw), 0, -Math.sin(camYaw))
 
@@ -260,23 +258,50 @@ function animate() {
   stamina = Math.max(0, Math.min(maxStamina, stamina))
   document.getElementById('stamina-bar').style.width = stamina + '%'
 
-  // posição com colisão básica
-  let nextPx = px, nextPz = pz
-  if (moving) {
-    nextPx += moveVec.x * speed
-    nextPz += moveVec.z * speed
+  // posição com colisão  (paredes e objetos)
+  function isColliding(x, z) {
+    const r = 0.5; // Raio de colisão do padeiro
+    
+    if (x - r < -21 || x + r > 21 || z - r < -12 || z + r > 21) return true;
+
+    const OBSTACLES = [
+      { minX: 8.8, maxX: 19.2, minZ: 2.8, maxZ: 5.2 },       // Balcão principal
+      { minX: 9.5, maxX: 14.5, minZ: 5.5, maxZ: 6.5 },       // Bancos do balcão
+      { minX: -13.7, maxX: -10.3, minZ: 4.8, maxZ: 7.2 },    // Mesa de trabalho 1
+      { minX: -13.7, maxX: -10.3, minZ: -1.2, maxZ: 1.2 },   // Mesa de trabalho 2
+      { minX: -13.7, maxX: -10.3, minZ: -7.2, maxZ: -4.8 },  // Mesa de trabalho 3
+      { minX: 6.3, maxX: 9.7, minZ: -7.2, maxZ: -4.8 },      // Mesa de trabalho 4 (direita)
+      { minX: -1.5, maxX: 1.5, minZ: -13, maxZ: -10.5 },     // Forno
+      { minX: 13, maxX: 19, minZ: -13, maxZ: -10.5 },        // Armários de Cozinha
+      { minX: -19.5, maxX: -14.5, minZ: -13, maxZ: -11.5 },  // Prateleira
+      { minX: -14.5, maxX: -10.5, minZ: 2.5, maxZ: 4.8 },    // Sacos de farinha
+      { minX: -21.5, maxX: -20, minZ: 19, maxZ: 20.5 },      // Planta Esquerda
+      { minX: 19, maxX: 20.5, minZ: 19, maxZ: 20.5 }         // Planta Direita
+    ];
+
+    for (let obs of OBSTACLES) {
+      if (x + r > obs.minX && x - r < obs.maxX &&
+          z + r > obs.minZ && z - r < obs.maxZ) {
+        return true;
+      }
+    }
+    return false;
   }
-  nextPx = Math.max(-20, Math.min(20, nextPx))
-  nextPz = Math.max(-10, nextPz)
 
-  // bloqueia saída pela parede da frente (exceto pela porta)
-  const naPorta = nextPx > -1.75 && nextPx < 1.75
-  if (nextPz > 21.5 && !naPorta) nextPz = Math.min(pz, 21.5)
-  nextPz = Math.min(60, nextPz)
+  if (moving) {
+    let testPx = px + moveVec.x * speed;
+    let testPz = pz + moveVec.z * speed;
 
-  px = nextPx; pz = nextPz
+    let canMoveX = !isColliding(testPx, pz);
+    let canMoveZ = !isColliding(px, testPz);
+
+    if (canMoveX) px = testPx;
+    if (canMoveZ) pz = testPz;
+  }
+
   player.group.position.set(px, 0, pz)
   player.walkAnim(dt * (isRunning ? 1.5 : 1) * speedMult, moving)  
+  
   // forno
   if (ovenBread) ovenBread.update(dt, ovenTotal)
 
@@ -290,7 +315,7 @@ function animate() {
   }
   for (let c of customers) c.update(dt)
 
-  // === CÂMARA ORBITAL ESTILO ROBLOX ===
+  // === CÂMARA ORBITAL ===
   const camDist = 7
   const camTarget = new THREE.Vector3(px, 1.2, pz)
   const idealCamPos = new THREE.Vector3(
@@ -303,12 +328,10 @@ function animate() {
   const cPad = 1.0 
 
   if (pz <= 21.5) {
-   
     idealCamPos.x = Math.max(-22 + cPad, Math.min(22 - cPad, idealCamPos.x))
     idealCamPos.z = Math.max(-13 + cPad, Math.min(22 - cPad, idealCamPos.z))
   } else {
     idealCamPos.x = Math.max(-22 + cPad, Math.min(22 - cPad, idealCamPos.x))
-    
     if (idealCamPos.x < -1.75 || idealCamPos.x > 1.75) {
       idealCamPos.z = Math.max(22 + cPad, Math.min(60, idealCamPos.z))
     } else {
