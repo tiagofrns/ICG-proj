@@ -14,6 +14,7 @@ let stamina    = 100
 const maxStamina = 100
 let moving = false
 let gameStarted = false
+let isExhausted = false
 
 let shopOpen = false;
 let speedMult = 1.0;
@@ -224,8 +225,11 @@ function animate() {
 
   //mov
   moving = false
+  if (stamina <= 0) isExhausted = true;
+  if (stamina > 20) isExhausted = false;
+
   let speed = 0.12 * speedMult;
-  const isRunning = (keys['ShiftLeft'] || keys['ShiftRight']) && stamina > 0;
+  const isRunning = (keys['ShiftLeft'] || keys['ShiftRight']) && !isExhausted;
   if (moving && isRunning) { speed = 0.22 * speedMult; stamina -= dt * 40 }
 
   const camForward = new THREE.Vector3(-Math.sin(camYaw), 0, -Math.cos(camYaw))
