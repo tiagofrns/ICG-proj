@@ -36,7 +36,7 @@ const startBtn = document.getElementById('start-btn');
 // LOGICA DA LOJA -
 document.getElementById('btn-upg-speed')?.addEventListener('click', (e) => {
   if (money >= 50 && speedMult === 1.0) {
-    addMoney(-25);
+    addMoney(-15);
     speedMult = 1.5;
     e.currentTarget.classList.add('bought');
     document.getElementById('shop-money').textContent = money.toFixed(2).replace('.', ',') + ' €';
@@ -46,7 +46,7 @@ document.getElementById('btn-upg-speed')?.addEventListener('click', (e) => {
 
 document.getElementById('btn-upg-oven')?.addEventListener('click', (e) => {
   if (money >= 80 && ovenMult === 1.0) {
-    addMoney(-30);
+    addMoney(-20);
     ovenMult = 0.6; // Forno 40% mais rápido
     e.currentTarget.classList.add('bought');
     document.getElementById('shop-money').textContent = money.toFixed(2).replace('.', ',') + ' €';
